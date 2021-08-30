@@ -8,7 +8,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Getting to know Tinglei Wu
-Tinglei comes from Chongqing, China, He likes table tennis.
+1. Hometown
 
-His journey to data science is that he studied math and business in his undergraduate school, and he found out that managing data is interesting.
+   Chongqing, China
+
+2. Hobby
+
+   Table Tennis
+   
+3. Journey to data science
+   
+   I studied math and business in my undergraduate school and I found out    that managing data is interesting.
+
+
 
