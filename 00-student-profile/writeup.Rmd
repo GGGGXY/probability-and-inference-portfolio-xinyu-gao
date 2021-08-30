@@ -1,0 +1,14 @@
+---
+title: "writeup"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Getting to know Tinglei Wu
+Tinglei comes from Chongqing, China, He likes table tennis.
+
+His journey to data science is that he studied math and business in his undergraduate school, and he found out that managing data is interesting.
+
