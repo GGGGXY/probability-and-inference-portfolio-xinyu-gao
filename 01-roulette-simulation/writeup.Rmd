@@ -1,0 +1,315 @@
+---
+title: "Title of Blog Post Deliverable"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction 
+The purpose of this assignment is to test whether the Martingale strategy is profitable for playing roulette in a real situation.
+
+## Background
+Four parameters are very important in this simulation. Starting budget(B), winnings threshold for stopping(W), time threshold for stopping(L), casino's maximum wager(M). Starting budget is equivalent to the starting money owned by a gambler. Winnings threshold for stopping means if a gambler’s winnings plus the starting money exceed this threshold, the game will stop. Time threshold for stopping means the maximum play numbers a gambler can have in a round of games. Casino's maximum wager means the maximum wager a gambler can bet. 
+
+# Methods
+
+## Task1
+```{r}
+# required package 
+library(dplyr)
+library(magrittr)
+```
+
+```{r}
+#' A single play of the Martingale strategy
+#'
+#' Takes a state list, spins the roulette wheel, returns the state list with updated values (for example, budget, plays, etc)
+#' @param state A list with the following entries: 
+#'   B              number, the budget
+#'   W              number, the budget threshold for successfully stoping
+#'   L              number, the maximum number of plays 
+#'   M              number, the casino wager limit
+#'   plays          integer, the number of plays executed
+#'   previous_wager number, the wager in the previous play (0 at first play)
+#'   previous_win   TRUE/FALSE, indicator if the previous play was a win (TRUE at first play)
+#' @return The updated state list
+one_play <- function(state){
+  
+    # Wager
+    proposed_wager <- ifelse(state$previous_win, 1, 2*state$previous_wager)
+    wager <- min(proposed_wager, state$M, state$B)
+    
+    # Spin of the wheel
+    red <- rbinom(1,1,18/38)
+    
+    # Update state
+    state$plays <- state$plays + 1
+    state$previous_wager <- wager
+    if(red){
+      # WIN
+      state$B <- state$B + wager
+      state$previous_win <- TRUE
+    }else{
+      # LOSE
+      state$B <- state$B - wager
+      state$previous_win <- FALSE
+    }
+  state
+}
+
+
+#' Stopping rule
+#'
+#' Takes the state list and determines if the gambler has to stop
+#' @param state A list.  See one_play
+#' @return TRUE/FALSE
+stop_play <- function(state){
+  if(state$B <= 0) return(TRUE)
+  if(state$plays >= state$L) return(TRUE)
+  if(state$B >= state$W) return(TRUE)
+  FALSE
+}
+
+
+#' Play roulette to either bankruptcy, success, or play limits
+#'
+#' @param B number, the starting budget
+#' @param W number, the budget threshold for successfully stoping
+#' @param L number, the maximum number of plays 
+#' @param M number, the casino wager limit
+#' @return A vector of budget values calculated after each play.
+one_series <- function(
+    B = 200
+  , W = 300
+  , L = 1000
+  , M = 100
+){
+
+  # initial state
+  state <- list(
+    B = B
+  , W = W
+  , L = L
+  , M = M
+  , plays = 0
+  , previous_wager = 0
+  , previous_win = TRUE
+  )
+  
+  # vector to store budget over series of plays
+  budget <- rep(NA, L)
+  
+  # For loop of plays
+  for(i in 1:L){
+    new_state <- state %>% one_play
+    budget[i] <- new_state$B
+    if(new_state %>% stop_play){
+      return(budget[1:i])
+    }
+    state <- new_state
+  }
+  budget    
+}
+
+# helper function
+get_last <- function(x) x[length(x)] 
+```
+> Code from the teacher
+
+```{r}
+# set the seed of R's random number generator. "1" simulates a winning game 
+set.seed(1) 
+# ledger stores the (ending budget - starting budget) of each play 
+ledger <- one_series(200,300,1000,100) - 200
+# get the total play number, plot the play number and its corresponding earning 
+plot(1:length(ledger),ledger, type = "l", lwd = 5, xlab = "Play Number", ylab = "Earnings")
+
+# "2" simulates a losing game
+set.seed(2) 
+# ledger stores the (ending budget - starting budget) of each play 
+ledger <- one_series(200,300,1000,100) - 200
+# get the total play number, plot the play number and its corresponding earning 
+plot(1:length(ledger),ledger, type = "l", lwd = 5, xlab = "Play Number", ylab = "Earnings")
+
+```
+
+
+![Earnings evolve over play number](Earn_task1.png) \
+> This figure is a scaled-down version of the first figure above. It simulates a winning play. The play stops when the winning reaches $100. For the part in the red rectangle, it shows the essence of this strategy that one win can offset all previous losses and at the same time, the gambler can win extra $1.
+
+![Losses evolve over play number](Loss_task1.png)\
+> This figure is a scaled-down version of the second figure above. It simulates a losing play. The play stops when the gambler loses all the money. Part in the red rectangle reveals a loophole in this strategy that although one win can offset all previous losses, gamblers may already lose all the money before the next win. 
+
+## Task2
+
+```{r}
+# try starting budget 200,250,300,350,400,450,500
+budget <- seq(200,500,by =50)
+# store the average earnings of a specific starting budget
+budget_ending <- 0 * budget
+# for each starting budget, repeat the game 10000 times
+walk_out_money <- rep(NA,10000)
+
+# for each starting budget, repeat 10000 times
+for (i in seq_along(budget)){
+  for (j in seq_along(walk_out_money)){
+    # find the ending budget of each play
+    walk_out_money[j] <- one_series(budget[i],budget[i]+100,1000, 100) %>% get_last
+  }
+  # for each starting budget, find the average earnings (ending budget - starting budget)
+  budget_ending[i] <- mean(walk_out_money - budget[i])
+}
+# plot the result
+plot(budget,budget_ending,xlab = "Starting Budget", ylab="Average Earnings",pch=16)
+```
+
+> The above figure shows the average earnings for starting budgets (B) from 200 to 500 at 50 intervals. In this situation, the budget threshold (W) must be updated simultaneously otherwise, it will be meaningless. For example, if the starting budget is 400 and the winning threshold is 300, it is not reasonable. I define W = B+100. L and M keep the same. The result shows that the more the starting budget, the more the losses. I assume this situation may result from the casino wager limit. For a larger starting budget, it may require a larger casino wager limit otherwise, there will be one special situation that the play goes on, but if lose, the next play's wager can't reach 2xlosses, which actually breaks the Martingale strategy's rule.
+
+```{r}
+# try starting budget 200,250,300,350,400,450,500
+budget <- seq(200,500,by =50)
+# store the average earnings of a specific starting budget
+budget_ending <- 0 * budget
+# for each starting budget, repeat the game 10000 times
+walk_out_money <- rep(NA,10000)
+
+# for each starting budget, repeat 10000 times
+for (i in seq_along(budget)){
+  for (j in seq_along(walk_out_money)){
+    # find the ending budget of each play
+    walk_out_money[j] <- one_series(budget[i],budget[i]+100,1000, budget[i]*0.5) %>% get_last
+  }
+  # for each starting budget, find the average earnings (ending budget - starting budget)
+  budget_ending[i] <- mean(walk_out_money - budget[i])
+}
+# plot the result
+plot(budget,budget_ending,xlab = "Starting Budget", ylab="Average Earnings",pch=16)
+```
+
+> The above figure shows the average earnings for starting budgets (B) from 200 to 500 at 50 intervals. In this situation, budget threshold (W) = B+100, casino wager limit (M) = B/2. Compared to the previous situation, average earnings of different starting budgets this time are not much different and there is no absolute negative correlation trend. Thus, it is reasonable to assume that for a larger starting budget, a larger casino wager limit is required. 
+
+## Task3
+```{r}
+single_spin <- function(){
+  possible_outcomes <- c(rep("red",18), rep("black",18), rep("green",2))
+  sample(possible_outcomes, 1)
+}
+
+martingale_wager <- function(
+  previous_wager
+  , previous_outcome
+  , max_wager
+  , current_budget
+){
+  if(previous_outcome == "red") return(1)
+  min(2*previous_wager, max_wager, current_budget)
+}
+
+one_play_2 <- function(previous_ledger_entry, max_wager){
+  # Create a copy of the input object that will become the output object
+  out <- previous_ledger_entry
+  out[1, "game_index"] <- previous_ledger_entry[1, "game_index"] + 1
+  out[1, "starting_budget"] <- previous_ledger_entry[1, "ending_budget"]
+  out[1, "wager"] <- martingale_wager(
+    previous_wager = previous_ledger_entry[1, "wager"]
+    , previous_outcome = previous_ledger_entry[1, "outcome"]
+    , max_wager = max_wager
+    , current_budget = out[1, "starting_budget"]
+  )
+  out[1, "outcome"] <- single_spin()
+  out[1, "ending_budget"] <- out[1, "starting_budget"] + 
+    ifelse(out[1, "outcome"] == "red", +1, -1)*out[1, "wager"]
+  return(out)
+}
+
+one_series_2 <- function(
+  max_games, starting_budget, winning_threshold, max_wager
+){
+  # Initialize ledger
+  ledger <- data.frame(
+      game_index = 0:max_games
+    , starting_budget = NA_integer_
+    , wager = NA_integer_
+    , outcome = NA_character_
+    , ending_budget = NA_integer_
+  )
+  ledger[1, "wager"] <- 1
+  ledger[1, "outcome"] <- "red"
+  ledger[1, "ending_budget"] <- starting_budget
+  for(i in 2:nrow(ledger)){
+    #browser()
+    ledger[i,] <- one_play_2(ledger[i-1,], max_wager)
+    if(stopping_rule(ledger[i,], winning_threshold)) break
+  }
+  # Return non-empty portion of ledger
+  ledger[2:i, ]
+}
+
+stopping_rule <- function(
+  ledger_entry
+  , winning_threshold
+){
+  ending_budget <- ledger_entry[1, "ending_budget"]
+  if(ending_budget <= 0) return(TRUE)
+  if(ending_budget >= winning_threshold) return(TRUE)
+  FALSE
+}
+
+profit <- function(ledger){
+  n <- nrow(ledger)
+  profit <- ledger[n, "ending_budget"] - ledger[1, "starting_budget"]
+  return(profit)
+}
+
+require(magrittr)
+
+```
+> Code from the teacher
+
+```{r}
+# repeat 10000 times
+play_before_stopping <- rep(NA,10000)
+# for each play, record the total play times before stopping
+for (i in seq_along(play_before_stopping)){
+  # get the play information
+  ledger <- one_series_2(1000,200,300,100)
+  # access the total play numbers
+  play_before_stopping[i] <- ledger[nrow(ledger),1]
+}
+# calculate the average numbers of play before stopping
+mean(play_before_stopping)
+hist(play_before_stopping, breaks = 100)
+```
+
+> The average number of play is around 200. Following is the parametes information of this simulation:
+B = 200, W = 300, L = 1000, M = 100
+The first step to get the average play numbers is to decide the number of repeats. In this situation, I decided to play roulette 10000 times. Then, I need to calculate the play number of each time. This step is achieved by a computer. I used my computer to simulate one roulette play and repeated it 10000 times. Play will stop in the following three cases, which mimic what might happen in real life: 1. B = 0, which mimics the situation that a gambler loses all the money. 2. W = 300, which means that a gambler is very lucky and he wins the most money he can win. Thus, the play should stop.  3. L = 1000, which means a gambler runs out of all play chances. In real life, cases 2 and 3 are likely to be set by dealers to protect their own interests.
+
+
+## Task4
+> Limitations of the simulation:
+1. Not enough repetitions. Due to the limited computation speed, I set the repetitions as 10000 but it actually only covers a small subset of the real situation. 
+2. In the simulation, I used R's random number generator to simulate the process of turning the roulette. However, the random number generator is pseudo and it follows certain rules to generate random numbers. Thus, it's not a perfect way to simulate the real situation. 
+3. In a real situation, besides the three limitations (budget threshold, maximum number of plays, the casino wager limit), there may be other limitations like the minimum wager for each play. 
+
+
+# Conclusions
+The essence of the Martingale strategy is increasing the chances of a gambler turning a loss into a win. In other words, one win can offset all previous losses. However, in a real situation, this strategy is very risky and restrictive. If a gambler’s starting budget is small, it is difficult for him to use this strategy to make money because he probably loses all his money before a win appears. A Low time threshold for a gambler with a large starting budget will cause the same problem.  If a gambler's starting budget is large but the Casion wager limit is small. It's also very difficult for him to win the money because after he has lost several times, the required wager has exceeded the limit. In this case, this strategy is no longer applicable. From my perspective, if a gambler with a large starting budget is in a casino without the time and wager restrictions, this strategy can be regarded as useful as long as the gambler is not too greedy and his luck is not too bad.
+
+
+
+
+
+
+
+
