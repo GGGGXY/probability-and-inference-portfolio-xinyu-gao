@@ -19,7 +19,11 @@ knitr::opts_chunk$set(echo = TRUE)
 The purpose of this assignment is to test whether the Martingale strategy is profitable for playing roulette in a real situation.
 
 ## Background
-Four parameters are very important in this simulation. Starting budget(B), winnings threshold for stopping(W), time threshold for stopping(L), casino's maximum wager(M). Starting budget is equivalent to the starting money owned by a gambler. Winnings threshold for stopping means if a gambler’s winnings plus the starting money exceed this threshold, the game will stop. Time threshold for stopping means the maximum play numbers a gambler can have in a round of games. Casino's maximum wager means the maximum wager a gambler can bet. 
+<span style="color:red"> Basic rules for roulette: the roulette used in this simulation composed of 38 evenly sized pockets, which 2 are green, 18 are red, and 18 are black. The bet on black (or red) is `$1` for each wager. If the gambler bets on red and the randomly selected pocket is red. He will win `$1` otherwise he will lose original money. In other word, `$2` if he wins and 0 if he loses.
+
+<span style="color:red"> Basic operations of the strategy I want to test in this simulation: 1.Start wager `$1` on red  2. If the randomly selected result is red, wager `$1` on red otherwise wager twice the losses from previous wager on red. 3. Repeat step 2 until meets stopping rules. The essence of this strategy, if you do the simple calculation, is that one win can offset all previous loses. The purpose of this simulation is to test whether this strategy is profitable in the real situation. 
+
+Important parameters and stopping rules in this simulation. Starting budget(B), winnings threshold for stopping(W), time threshold for stopping(L), casino's maximum wager(M). Starting budget is equivalent to the starting money owned by a gambler. Winnings threshold for stopping means if a gambler’s winnings plus the starting money exceed this threshold, the game will stop. Time threshold for stopping means the maximum play numbers a gambler can have in a round of games. Casino's maximum wager means the maximum wager a gambler can bet. 
 
 # Methods
 
@@ -125,6 +129,8 @@ one_series <- function(
 get_last <- function(x) x[length(x)] 
 ```
 > Code from the teacher
+<span style="color:red"> Explanation: There are three major functions. They are respectively "one_play", "stop_play", and "one_series". The function "stop_play" is to check the game state. If the budget is less than or equal to 0 or larger than or equal to the casino wager limit, or the playing number exceeds the maximum number of play, the game should stop. The function "one_play" is to simulate one wager. It has three main functions: 1. decide the wager for this play 2. simulate the roulette spinning to get the result of this play. 3. based on the result, update the budget, play numbers, and the winning status. The function "one series" is to simulate the full game. Firstly, it initializes the game parameters. Then it uses a for loop to repeat the "one_play" function until meets stopping criteria. 
+
 
 ```{r}
 # set the seed of R's random number generator. "1" simulates a winning game 
@@ -133,16 +139,21 @@ set.seed(1)
 ledger <- one_series(200,300,1000,100) - 200
 # get the total play number, plot the play number and its corresponding earning 
 plot(1:length(ledger),ledger, type = "l", lwd = 5, xlab = "Play Number", ylab = "Earnings")
+```
+\
+> <span style="color:red"> Explanation: The X-axis represents the play number and the Y-axis represents the earnings after each play. The earning is defined as "ending budget of this play" - "starting budget". This figure simulates a winning play.
 
+
+```{r}
 # "2" simulates a losing game
 set.seed(2) 
 # ledger stores the (ending budget - starting budget) of each play 
 ledger <- one_series(200,300,1000,100) - 200
 # get the total play number, plot the play number and its corresponding earning 
 plot(1:length(ledger),ledger, type = "l", lwd = 5, xlab = "Play Number", ylab = "Earnings")
-
 ```
-
+\
+> <span style="color:red"> Explanation: The X-axis represents the play number and the Y-axis represents the earnings after each play. The earning is defined as "ending budget of this play" - "starting budget". This figure simulates a losing play.
 
 ![Earnings evolve over play number](Earn_task1.png) \
 > This figure is a scaled-down version of the first figure above. It simulates a winning play. The play stops when the winning reaches $100. For the part in the red rectangle, it shows the essence of this strategy that one win can offset all previous losses and at the same time, the gambler can win extra $1.
@@ -275,6 +286,7 @@ require(magrittr)
 
 ```
 > Code from the teacher
+<span style="color:red"> Explanation: There are five major functions. They are respectively "single_spin", "martingale_wager", "one_play_2", "one_series_2", and "stopping_rule". The function "single_spin" is to simulate the roulette spinning to get the result of this play. The function "martingale_wager" is to decide the wager for this play based on the previous outcome. The function "stopping_rule","one_play_2", and "one_series_2" are the same as "stop_play","one_play","one_series" respectively mentioned above. 
 
 ```{r}
 # repeat 10000 times
