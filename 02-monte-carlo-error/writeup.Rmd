@@ -1,0 +1,131 @@
+---
+title: "Monte Carlo Error"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction 
+
+>Purpose of this assignment is to investigate the relationship between the number of replicates and Monte Carlo simulation error. To be more specific, absolute error and relative error.
+
+## Background
+
+>Monte Carlo simulation is a model that generates a large number of random numbers to calculate an approximate solution to a problem. In this assignment, rbinom is used to simulate how Monte Carlo simulation works. There are three arguments of rbinom: n, size, prob. rbinom(10,20,0.5) means 10 observations of the number of successes in 20 independent trials given 0.5 probability of success. Absolute error equals the absolute value of simulated probability minus true underlying probability. Relative error equals the absolute error divided by true underlying probability.
+
+# Method
+```{r}
+# required library
+library(tidyverse)
+```
+
+```{r}
+# This function is to change the format of the dataframe for future plotting.
+format_change <- function(df,name)
+{
+  df <- df %>%
+    select(prob:15) %>%
+    # pivot wide format data to long format data. N represents the log2 scale of replicate number and name stores the probability estimated from simulation
+    pivot_longer(.,cols = c("2":"15"), names_to = "N",values_to = name)
+  
+  # convert the list type to discrete
+  df$N <- as.integer(df$N) %>%
+    as.factor()
+  # convert the list type to double
+  ifelse(name == "Absolute_Error",df$Absolute_Error <-as.double(df$Absolute_Error),df$Relative_Error <-as.double(df$Relative_Error))
+  # convert the list type to discrete
+  df$prob <- as.numeric(df$prob) %>%
+    as.factor()
+  
+  return(df)
+}
+```
+
+```{r}
+# define required probability
+prob <- c(0.01,0.05,0.10,0.25,0.50)
+# define required log2 scale of the replicate number
+rep <- c(2:15)
+# define two 5 * 15 dataframes to store related information
+abs_result_df <- data.frame(matrix(list(),nrow = 5, ncol=15))
+rel_result_df <- data.frame(matrix(list(),nrow = 5, ncol=15))
+# define columns name for dataframes
+name <- c(c("prob"),c(2:15))
+colnames(abs_result_df) <- name
+colnames(rel_result_df) <- name
+
+# find the absolute error and relative error for each combination of replicate number and probability
+for (i in 1:length(prob))
+{
+  # store the probability
+  abs_result_df[[i,1]] = prob[i]
+  rel_result_df[[i,1]] = prob[i]
+  # calculate the absolute error and relative error
+  for (p in 1:length(rep))
+  {
+    # want to get the same result for each simulation
+    set.seed(2)
+    # produces 1000 observations from Bin(2^rep[p],prob[i]) 
+    # Bin(2^rep[p],prob[i]) is defined by the number of successes in 2^rep[p] independent trials
+    # Use 2^rep[p] to divide the number of successes to get the simulation probability 
+    result = rbinom(1000,2^rep[p],prob[i]) /2^rep[p]
+    # find the average absolute error among 1000 observations
+    abs_result_df[[i,p+1]] = mean(abs(result-prob[i]))
+    # find the average relative error among 1000 observations
+    rel_result_df[[i,p+1]] = mean(abs(result-prob[i])/prob[i])
+  }
+}
+# change the format: from 5 * 15 to 3 * 70. Columns of new dataframe are prob, N and Absolute_Error (Relative_Error)
+abs_result_df2 <- format_change(abs_result_df,"Absolute_Error")
+rel_result_df2 <- format_change(rel_result_df,"Relative_Error")
+```
+
+```{r}
+abs_result_df2 %>%
+  # X-axis is the log2(replicate number), Y-axis is the absolute error, group by probability
+  ggplot(aes(x = N, y = Absolute_Error,group = prob,color = prob)) +
+  # add points
+  geom_point(aes(group = prob,col=prob)) +
+  # add lines
+  geom_line(aes(group = prob,col=prob)) +
+  # add one label for each line otherwise, the figure will be messy.
+  geom_label(aes(label = prob), data = abs_result_df2 %>% filter (N == 2))+
+  # define X label and Y label for the figure.
+  labs(y= "Absolute Error", x = "N (log2 Scale)") 
+```
+\
+\
+> This figure shows five probabilities (0.01,0.05,0.1,0.25,0.5) and their corresponding absolute error changes with the change of replicate number. The absolute error of all probabilities decreases as the replicate number increases. The order of the five probability absolute error is 0.5 > 0.25 > 0.1 > 0.05 > 0.01.
+
+```{r}
+rel_result_df2 %>%
+   # X-axis is the log2(replicate number), Y-axis is the relative error, group by probability
+  ggplot(aes(x = N, y = Relative_Error,group = prob,color = prob)) +
+  # add points
+  geom_point(aes(group = prob,col=prob)) +
+  # add lines
+  geom_line(aes(group = prob,col=prob)) +
+  # add one label for each line otherwise, the figure will be messy.
+  geom_label(aes(label = prob), data = rel_result_df2 %>% filter (N == 2))+
+  # define X label and Y label for the figure.
+  labs(y= "Relative Error", x = "N (log2 Scale)") 
+```
+\
+\
+> This figure shows five probabilities (0.01,0.05,0.1,0.25,0.5) and their corresponding relative error changes with the change of replicate number. The relative error of all probabilities decreases as the replicate number increases. The order of the five probability relative error is 0.01 > 0.05 > 0.1 > 0.25 > 0.5.
+
+# Conclusion
+> From the above results, the degree of absolute error and relative error do get smaller as the number of simulation replicates increases, which means when the intervention of random variables is present, people can improve the accuracy of predicting different outcomes by increasing the simulation replicates. In the real world, prediction is needed in various industries and there will be a lot of unknowns in the process of prediction. This concept is very important because it provides a good solution to this dilemma.
+
+
+
