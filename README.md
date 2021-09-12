@@ -1,2 +1,4 @@
 # probability-and-inference-portfolio-xinyu-gao
-hhhhhhh
+00-student-profile 
+01-roulette-simulation
+02-monte-carlo-error
