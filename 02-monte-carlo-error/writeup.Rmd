@@ -80,9 +80,9 @@ for (i in 1:length(prob))
     # Use 2^rep[p] to divide the number of successes to get the simulation probability 
     result = rbinom(1000,2^rep[p],prob[i]) /2^rep[p]
     # find the average absolute error among 1000 observations
-    abs_result_df[[i,p+1]] = mean(abs(result-prob[i]))
+    abs_result_df[[i,p+1]] =log( mean(abs(result-prob[i])),10)
     # find the average relative error among 1000 observations
-    rel_result_df[[i,p+1]] = mean(abs(result-prob[i])/prob[i])
+    rel_result_df[[i,p+1]] =log(mean(abs(result-prob[i])/prob[i]),10) 
   }
 }
 # change the format: from 5 * 15 to 3 * 70. Columns of new dataframe are prob, N and Absolute_Error (Relative_Error)
