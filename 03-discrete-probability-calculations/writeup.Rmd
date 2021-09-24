@@ -1,0 +1,165 @@
+---
+title: "Discrete Probability Calculations"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+# Introduction 
+
+The  purpose of this assignment is to answer the questions related to the world series using the rules of probability and discrete probability functions.
+
+## Background
+
+The world series is a best-of-7-match-up (can be best-of-odd_num-match-up) between the champions of the American and National Leagues of Major Baseball. The definition of winning a game is that one team has won (7+1)/2 wins. In this problem, Braves and Yankees are teams competing in the World Series and the probability that the Braves win is P(B) and the probability that the Yankees win is P(Y)=1−P(B). Thus it is about binomial random variable. To be more specific, negative binomial random variable. Two probability functions are used in this assignment: "pnbinom" and "dnbinom". dnbinom(x,y,p) means that given the probability p, find the the probability that when B event occurs Y times, A time appears X times. pnbinom(x,y,p) means that given the probability p,find the the probability that when B event occurs Y times, A time appears less than or equal to X times.
+
+# Methods
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+## Question1
+Braves wins, in other words it wins four games in the world series. When Braves wins the fourth game, the number of games Yankees can win is 0, 1, 2, 3 (<=3). Thus, this problem can be solved by using "pnbinom" function
+```{r}
+pnbinom(3,4,0.55)
+```
+\
+The probability that the Braves win the World Series given that P(B)=0.55 is 0.6082878
+
+## Question2
+Braves wins, in other words it wins four games in the world series. When Braves wins the fourth game, the number of games Yankees can win is 0, 1, 2, 3 (<=3). Thus, the P(Braves Win World Series) = pnbinom(3,4,P(B)). In this question, we need to find the relationship between P(Braves Win World Series) and P(B). In this question, I set the probability range of P(B) as 0.5-1.0, increasing in 0.01 intervals. Then calculate the corresponding pnbinom value.
+```{r}
+# define the winning probability of Braves
+prob_braves_2 <- seq(0.5,1.0,by = 0.01)
+# define a vector to store the corresponding pnbinom values.
+prob_win_2 <- rep(NA,length(prob_braves_2))
+# use for loop to calculate the pnbinom values
+for (i in 1:length(prob_braves_2)){
+  prob_win_2[i] = pnbinom(3,4,prob_braves_2[i])
+}
+# construct a dataframe using winning probability of the Braves vector and the corresponding pnbinom vector
+data.frame(prob_braves_2,prob_win_2) %>%
+  # use ggplot to draw the graphic
+  ggplot(aes(x=prob_braves_2,y=prob_win_2)) +
+  geom_point() +
+  # define the labels
+  labs(
+    x = "Probability of the Braves winning a head-to-head matchup",
+    y = "P(Win World Series)",
+    title = "Probability of winning the World Series"
+  ) +
+  # add the border
+  theme(
+    panel.border = element_rect(colour = "black", fill=NA, size=1)
+  ) 
+```
+\
+The X-axis is the probability of the Braves winning a head-to-head matchup and the Y-axis is the probability of the Braves win the world series. With the increase of P(B), P(Win World Series) increases from 0.5 fast and then slowly increases to 1.0.
+
+## Question3
+Suppose the world series is best-of-x-match-up. Braves wins, in other words it wins (x+1)/2 games in the world series. When Braves wins the (x+1)/2 game, the number of games Yankees can win is 0, 1, 2,...,(x+1)/2-1 (<=(x+1)/2-1). Thus, the P(Braves Win World Series) = pnbinom((x+1)/2-1,(x+1)/2,0.55). In this question, we need to find the x that can make P(Braves Win World Series) >= 0.8
+```{r}
+#from the question2, we find that best-of-7-match-up can not get the probability exceeds 0.8. Thus, start from it can be faster to find the target series length
+prob_win_3 <- pnbinom(3,4,0.55)
+i <- 7
+# loop until the P(Braves Win World Series) >= 0.8
+while (prob_win_3 < 0.8)
+{
+  # update the series length by 2 because it must be an odd number
+  i <- i + 2
+  markline <- (i+1)/2
+  # update the P(Braves Win World Series)
+  prob_win_3 = pnbinom(markline-1,markline,0.55)
+}
+i
+```
+\
+The shortest series length so that P(Braves win World Series|PB =.55) ≥ 0.8 is 71.
+
+## Question4
+Suppose the world series is best-of-x-match-up. Braves wins, in other words it wins (x+1)/2 games in the world series. When Braves wins the (x+1)/2 game, the number of games Yankees can win is 0, 1, 2,...,(x+1)/2-1 (<=(x+1)/2-1). Thus, the P(Braves Win World Series) = pnbinom((x+1)/2-1,(x+1)/2,P(B)). In this question, we need to find, for different P(B), the corresponding x that can make P(Braves Win World Series) >= 0.8
+```{r}
+# define the winning probability of Braves. The probability can not be 0.5 otherwise, it is impossible for P(Braves Win World Series) >= 0.8
+prob_braves_4 <- seq(0.51,1.0,by = 0.01)
+# define a vector to store the corresponding series length
+series_len <- rep(NA,length(prob_braves_4))
+# use for loop to try all probability values
+for (i in 1:length(prob_braves_4))
+{
+  # for each new P(B), start from series length as 1
+  series <- 1
+  prob_win_4 <- pnbinom(0,1,prob_braves_4[i])
+  # loop until the P(Braves Win World Series) >= 0.8
+  while(prob_win_4 < 0.8)
+  {
+    # update the series length by 2 
+    series <- series + 2
+    markline <- (series+1)/2
+    # update the P(Braves Win World Series)
+    prob_win_4 <- pnbinom(markline-1,markline,prob_braves_4[i])
+  }
+  # store the series length 
+  series_len[i] <- series
+}
+
+#construct a dataframe using winning probability of the Braves vector and the corresponding series length vector
+data.frame(prob_braves_4,series_len) %>%
+  # use ggplot to draw the graphic
+  ggplot(aes(x=prob_braves_4,y=series_len)) +
+  geom_point() +
+  # define labels
+  labs(
+    x = "Probability of the Braves winning a head-to-head matchup",
+    y = "Series length",
+    title = "Shortest series so that P(Win WS given p) >= 0.8"
+  )+
+  # draw the border
+   theme(
+    panel.border = element_rect(colour = "black", fill=NA, size=1)
+  )
+```
+\
+The X-axis is the probability of the Braves winning a head-to-head matchup and the Y-axis is the series length. With the increase of P(B) from 0.51 to 1.0, the required series lengthy decreases sharply at first and then slowly decreases to 0.
+
+## Question5
+Use Bayes Rule to extend the formula.
+$$P(P(B)=0.55|Braves win World Series in 7 games) = $$
+$$ \frac{P(Braves win World Series in 7 games|P(B)=0.55) * P(P(B)=0.55)}{P(Braves win World Series in 7 games|P(B)=0.55) * P(P(B)=0.55)+P(Braves win World Series in 7 games|P(B)=0.45) * P(P(B)=0.45)}$$
+\
+\
+P(Braves win World Series in 7 games|P(B)=0.55) means given P(B)=0.55, when Braves wins the fourth game, the number of games Yankees wins is 3 because it takes all 7 games to decide the winner
+$$P(Braves win World Series in 7 games|P(B)=0.55) = dnbinom(3,4,0.55)$$
+\
+\
+The assumption is that either P(B)=0.55 or P(B)=0.45
+$$P(P(B)=0.55) = 0.5$$ 
+\
+\
+P(Braves win World Series in 7 games|P(B)=0.45) means given P(B)=0.45, when Braves wins the fourth game, the number of games Yankees wins is 3 because it takes all 7 games to decide the winner
+$$P(Braves win World Series in 7 games|P(B)=0.45) = dnbinom(3,4,0.45)$$
+\
+\
+The assumption is that either P(B)=0.55 or P(B)=0.45
+$$P(P(B)=0.45) = 0.5$$
+\
+\
+$$P(P(B)=0.55|Braves win World Series in 7 games) = \frac{dnbinom(3,4,0.55)* 0.5}{dnbinom(3,4,0.55)* 0.5+dnbinom(3,4,0.45)* 0.5}$$
+```{r}
+# question 5
+result <- dnbinom(3,4,0.55)*0.5/(dnbinom(3,4,0.55)* 0.5+dnbinom(3,4,0.45)* 0.5)
+result
+```
+\
+Under the assumption that either PB=0.55 or PB=0.45, P(PB=0.55|Braves win World Series in 7 games) is 0.55.
