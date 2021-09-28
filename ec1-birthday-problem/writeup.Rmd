@@ -1,0 +1,119 @@
+---
+title: "Discrete Probability Calculations"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction 
+ The purpose of this assignment is to find the probability that at least two students will share a birthday in a class of N individuals using simulation way and analytics way.
+ 
+# Background
+  To solve the birthday problems. There are two ways. One way is to find cases where students share birthdays and then calculate the probability of these cases. Another way is to find the probability that no one shares the birthday and then the probability that at least two people share the birthday equals to 1 minus the probability that no one shares the birthday
+  
+# Methods
+```{r}
+library(tidyverse)
+```
+
+```{r}
+# simulation
+
+# initialize the class size and its corresponding probability
+size <- seq(1,80,1)
+prob_simulation <- rep(NA,length(size))
+
+# use sample to randomly generate a class simulating the real situation
+generate_class <- function(class_size){
+  # a year is defined as 365 days 
+  birthdays <- sample(1:365, class_size, replace = TRUE, prob = c(rep(1,364), .25))
+  # construct a dataframe
+  data.frame(student_id = 1:class_size, birthday = birthdays)
+}
+
+# check birthday status in the generated class
+check_birthday <- function(class){
+  class_summary <- class %>% 
+    summarize(n = n(), n_bday = n_distinct(birthday)) %>% 
+    # check the situation, if n > n_bday means that at least two students share a birthday. Thus TRUE otherwise FALSE
+    mutate(shared = n > n_bday)
+  class_summary[["shared"]]
+}
+
+# class size start from 1 to 80, with the interval of 1 
+for (i in 1:length(size))
+{
+  # set the replicate time and start simulation
+  replicates <- replicate(1000, size[i] %>% generate_class %>% check_birthday)
+  # find the proportion of cases that at least two students share a birthday
+  prob_simulation[i] <- mean(replicates)
+}
+
+dataframe_simulation <- data.frame(size, prob_simulation,rep("simulation",length(size)))
+colnames(dataframe_simulation) <- c("class_size","probability","category")
+```
+>Steps of using simulation to solve this problem: 1. Use sample function to generate a class 2. Check the birthday status in the class 3. For each class size, generate 1000 classes and find the proportion of classes that at least two students share a birthday
+
+
+```{r}
+# analytics
+
+# initialize the class size and construct a vector to store the probability
+size <- seq(1,80,1)
+prob_analytic <- rep(NA,length(size))
+# all possible qualified situations (sequence without replacement) / all possible situations(sequence with replacement)
+for (i in 1: length(size)){
+  prob_analytic[i] <- 1 - choose(365,size[i]) * factorial(size[i]) / 365^size[i]
+} 
+# construct a dataframe
+dataframe_analytic <- data.frame(size, prob_analytic, rep("analytic",length(size)))
+colnames(dataframe_analytic) <- c("class_size","probability","category")
+```
+>Explanation of using analytics to solve this problem: Instead of calculating the probability that two students will share a birthday. We can simplify the problem by calculating the probability that no student share birthdays. Then the P(at least two students share a birthday) = 1- P(no student share birthdays). If the class size is n, then all possible qualified situations are to select non-repeated n days from 365 days for sorting because the same birthday set assigned to different students should be regarded as different situations. In other word, this situation can be classified as sequence without replacement. All possible situations are to select n days from 365 days for sorting. Those selected days can be repeated. In other world, this situation can be classifies as sequence with replacement. P(no student share birthdays) = all possible qualified situations / all possible situations.
+
+```{r}
+# combine two dataframes
+dataframe_total <- rbind(dataframe_simulation,dataframe_analytic)
+dataframe_total %>%
+  ggplot(aes(x=class_size,y= probability, group = category,col = category)) +
+  geom_point()+
+  # legend property
+  scale_color_manual(values = c("analytic" = "red","simulation"="black"),
+                     breaks=c("analytic","simulation"),
+                     labels=c("Analytic solution", "Simulation solution"),
+                     guide = guide_legend(reverse=TRUE)) +
+  # label
+  labs(
+    x ="Size of group",
+    y ="Probability of at least one shared birthday"
+       )+
+  # border, grid and legend position
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  panel.background = element_blank(),legend.title = element_blank(),legend.position=c(0.6,0.6)) +
+  # add horizontal lines
+  geom_hline(yintercept=1, linetype="dashed", color = "gray") +
+  geom_hline(yintercept=0, linetype="dashed", color = "gray") 
+```
+\
+The X-axis is the class size and the Y-axis is the probability of at least one shared birthday. Results from the simulation way and analytic way are almost same. The growth trends of both are fast first and then slow. The result from the simulation way can be 1 but the result from the analytic way can only be infinitely close to 1. The result from the analytic way is steady but the result from the simulation way has a slight fluctuation.
+
+# Conclusion
+Simulation
+  pros: Its results are more in line with the results of real life because its essence is a simulation of real life
+  cons: 1. It takes a very long time to get the results. 2. With a limited number of replications, the results only cover a small part of the real situation.
+  
+Analytics:
+  pros: 1. It is very fast. 2. Its result is constant. Thus, it can be used as a reference to get a basic understanding of the probability of an event.
+  cons: This is based on theory but the situation in real life will not be the same as the theory thinks, it will be more changeable and complicated. So this is not a perfect reference. 
+
