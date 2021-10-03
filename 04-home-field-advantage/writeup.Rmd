@@ -1,0 +1,241 @@
+---
+title: "Title of Blog Post Deliverable"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+# Introduction 
+
+The purpose of this assignment is to use simulation and analytic methods to compare the probability of winning the World Series with and without home field advantage.
+
+## Background
+
+Without home field advantage, the probability of wining the World Series using analytic method can be regarded as a problem about negative binomial random variable. Negative binomial random variable is to study probability of x fails before yth success problem. If the Braves wants to win, it should win four games in the World Series. Before the 4th success, the Braves can lose 0,1,2, or 3 times because the World Series has 7 rounds. Thus we need to know probabilities of 0,1,2,or 3 fails before 4th success and add them up. This can be achieved by using "pnbinom" function. pnbinom(x,y,p) calculates the  probability of 0,1,...,x fails before yth success given p success probability and add them up. With home field advantage, the probability of wining the World Series using analytic method can not be regarded as a problem about negative binomial random variable because the it violates Bernoulli's constant probability property. Thus, we need to list all possible results of the game and calculate the probability of each result. Using simulation method to compare the probability of wining the World Series with and without home field advantage, we also need to list all possible results of the game because simulation is based on a given probability of success to simulate the results that will be obtained in reality, it will change in every round. For simulation, we need to use "rbinom" function. rbinom(x,y,p) means x observations of the number of successes in y independent trials given p probability of success and the simulated probability will be mean(rbinom(x,y,p)/y). Question four and five wants to study the relationship between the difference in probabilities (with vs without home field advantage) and P(B)/advantage factor. In this case, the analytic method is a good choice because it is completely based on theory and is fixed.
+
+# Methods
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(ggplot2)
+require(dplyr)
+require(data.table)
+# Get all possible outcomes
+apo <- fread("all-possible-world-series-outcomes.csv")
+```
+
+# Question one
+```{r}
+# with home advantage
+# Home field indicator
+hfi <- c(0,0,1,1,1,0,0) #{NYC, NYC, ATL, ATL, ATL, NYC, NYC}
+
+# P_B
+pb <- 0.55
+advantage_multiplier <- 1.1 # Set = 1 for no advantage
+# the Yankees as the home team
+pbh <- 0.55*advantage_multiplier
+# the Yankees as the away team
+pba <- 1 - (1 - 0.55)*advantage_multiplier
+
+# Calculate the probability of each possible outcome
+apo[, p := NA_real_] # Initialize new column in apo to store prob
+for(i in 1:nrow(apo)){
+  prob_game <- rep(1, 7)
+  for(j in 1:7){
+    # decide the probability of each round based on the game location
+    p_win <- ifelse(hfi[j], pbh, pba)
+    prob_game[j] <- case_when(
+        apo[i,j,with=FALSE] == "W" ~ p_win
+      , apo[i,j,with=FALSE] == "L" ~ 1 - p_win
+      , TRUE ~ 1
+    )
+  }
+  # calculate the probability of each possible game result
+  apo[i, p := prod(prob_game)] 
+}
+
+# Sanity check: does sum(p) == 1?
+# apo[, sum(p)] This is data.table notation
+
+# Probability of winning World Series
+apo[, sum(p), overall_outcome][[2]][1]
+
+# without home advantage
+pnbinom(3,4,0.55)
+
+#  difference
+abs(pnbinom(3,4,0.55)-apo[,sum(p),overall_outcome][[2]][1])
+```
+\
+Using analytic way, the probability of the Braves winning World Series with home field advantage is 0.604221, without home field advantage is 0.6082878. The difference between is 0.004066825.
+
+# Question two
+```{r}
+# P_B
+pb <- 0.55
+advantage_multiplier <- 1.1 
+pbh <- 0.55*advantage_multiplier
+pba <- 1 - (1 - 0.55)*advantage_multiplier
+
+# Home field indicator
+hfi <- c(0,0,1,1,1,0,0) # {NYC, NYC, ATL, ATL, ATL, NYC, NYC}
+
+# simulate the probability of each possible outcome
+apo[, p_simulation_advantage := NA_real_] # Initialize new column in apo to store prob
+apo[, p_simulation_without_advantage := NA_real_] # Initialize new column in apo to store prob
+
+for(i in 1:nrow(apo)){
+  prob_game_advantage <- rep(1, 7)
+  prob_game_without_advantage <- rep(1,7)
+  for(j in 1:7){
+    # decide the probability of each round based on the game location
+    p_win <- ifelse(hfi[j], pbh, pba)
+    set.seed(5)
+    prob_game_advantage[j] <- case_when(
+        # simulate realistic results according to the changed probability of success
+        apo[i,j,with=FALSE] == "W" ~ mean(rbinom(1000,10,p_win)/10)
+      , apo[i,j,with=FALSE] == "L" ~ mean(rbinom(1000,10,(1-p_win))/10)
+      , TRUE ~ 1
+    )
+    
+    prob_game_without_advantage[j] <- case_when(
+        # simulate realistic results according to the constant probability of success
+        apo[i,j,with=FALSE] == "W" ~ mean(rbinom(1000,10,0.55)/10)
+      , apo[i,j,with=FALSE] == "L" ~ mean(rbinom(1000,10,0.45)/10)
+      , TRUE ~ 1
+    )
+  }
+  # calculate the probability of each possible game result (with or without game advantage)
+  apo[i, p_simulation_advantage := prod(prob_game_advantage)] 
+  apo[i, p_simulation_without_advantage := prod(prob_game_without_advantage)]
+  
+}
+
+# Probability of winning World Series
+advantage <- apo[,sum(p_simulation_advantage),overall_outcome][[2]][1]
+advantage
+without_advantage <- apo[,sum(p_simulation_without_advantage),overall_outcome][[2]][1]
+without_advantage
+# difference
+abs(advantage - without_advantage)
+```
+\
+Using simulation way, the probability of the Braves winning World Series with home field advantage is 0.6080325, without home field advantage is 0.6172659. The difference between is 0.009233402.
+
+# Question three
+```{r}
+# with home field advantage
+p_advantage_simulation_3 <- apo[,sum(p_simulation_advantage),overall_outcome][[2]][1]
+p_advantage_analytic_3 <- apo[,sum(p),overall_outcome][[2]][1]
+abs_advantage <- abs(p_advantage_simulation_3 - p_advantage_analytic_3)
+abs_advantage
+rel_advantage <- abs(p_advantage_simulation_3 - p_advantage_analytic_3)/p_advantage_analytic_3
+rel_advantage
+
+# without home field advantage
+p_without_advantage_simulation_3 <- apo[,sum(p_simulation_without_advantage),overall_outcome][[2]][1]
+p_without_advantage_analytic_3 <- pnbinom(3,4,0.55)
+abs_without_advantage <- abs(p_without_advantage_simulation_3 - p_without_advantage_analytic_3)
+abs_without_advantage
+rel_without_advantage <- abs(p_without_advantage_simulation_3-p_without_advantage_analytic_3)/p_without_advantage_analytic_3
+rel_without_advantage
+```
+With home field advantage, the absolute error is 0.003811549, the relative error is 0.006308204. Without home field advantage, the absolute error is 0.008978126, the relative error is  0.01475967.
+
+# Question four
+```{r}
+# define the possibility list, the range is very important otherwise the probability may largee than 1 or smaller than 0
+pb_list <- seq(0.1,0.9,0.01)
+# store the difference
+diff_ques_four <- rep(0,length(pb_list))
+
+advantage_multiplier <- 1.1 # Set = 1 for no advantage
+hfi <- c(0,0,1,1,1,0,0) # {NYC, NYC, ATL, ATL, ATL, NYC, NYC}
+apo[, p_four := NA_real_]
+
+for( i in 1:length(pb_list))
+{
+  # different PB
+  pbh <- pb_list[i]*advantage_multiplier
+  pba <- 1 - (1 - pb_list[i])*advantage_multiplier
+  
+  for(j in 1:nrow(apo)){
+    prob_game <- rep(1, 7)
+    for(t in 1:7){
+      p_win <- ifelse(hfi[t], pbh, pba)
+      prob_game[t] <- case_when(
+        apo[j,t,with=FALSE] == "W" ~ p_win
+      , apo[j,t,with=FALSE] == "L" ~ 1-p_win
+      , TRUE ~ 1
+      )
+    }
+    apo[j,p_four := prod(prob_game)]
+  }
+  
+  diff_ques_four[i] = abs(apo[,sum(p_four),overall_outcome][[2]][1] - pnbinom(3,4,pb_list[i]))
+}
+# draw the graphic 
+data.frame(pb_list, diff_ques_four) %>%
+  ggplot(aes(x=pb_list, y = diff_ques_four)) +
+  geom_point()+
+   labs(
+    x = "Probability of the Braves winning a head-to-head matchup",
+    y = "Difference in probabilities (with vs without home field advantage)"
+  )
+```
+\
+The X-axis is the P(B) and the Y-axis is the difference in probabilities with and without home field advantage. The graphic shows three demarcation points, these three demarcation points are about 0.36, 0.58 and 0.72. Before 0.36 and between 0.58 and 0.72, the image has an upward trend. Between 0.36 and 0.58 and after 0.72, the image has an downward trend.
+
+# Question five
+```{r}
+# define the advantage factor list, the 
+advantage_list <- seq(1.1,1.8,0.01)
+diff_ques_five <- rep(0,length(advantage_list))
+
+#advantage_multiplier <- 1.1 # Set = 1 for no advantage
+hfi <- c(0,0,1,1,1,0,0) # {NYC, NYC, ATL, ATL, ATL, NYC, NYC}
+apo[, p_five := NA_real_]
+
+for( i in 1:length(advantage_list))
+{
+  # different advantage factor
+  pbh <- 0.55*advantage_list[i]
+  pba <- 1 - (1 - 0.55)*advantage_list[i]
+  
+  for(j in 1:nrow(apo)){
+    prob_game <- rep(1, 7)
+    for(t in 1:7){
+      p_win <- ifelse(hfi[t], pbh, pba)
+      prob_game[t] <- case_when(
+        apo[j,t,with=FALSE] == "W" ~ p_win
+      , apo[j,t,with=FALSE] == "L" ~ 1-p_win
+      , TRUE ~ 1
+      )
+    }
+    apo[j,p_five := prod(prob_game)]
+  }
+  diff_ques_five[i] = abs(apo[,sum(p_five),overall_outcome][[2]][1] - pnbinom(3,4,0.55))
+}
+# draw the graphic 
+data.frame(advantage_list, diff_ques_five) %>%
+  ggplot(aes(x=advantage_list, y = diff_ques_five)) +
+  geom_point()+
+  labs(
+    x = "Advantage Factor",
+    y = "Difference in probabilities (with vs without home field advantage)"
+  )
+
+```
+\
+The X-axis is the advantage factor and the Y-axis is the difference in probabilities with and without home field advantage. The difference keeps increasing with the increase of advantage factor
