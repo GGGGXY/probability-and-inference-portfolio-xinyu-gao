@@ -1,0 +1,340 @@
+---
+title: "Title of Blog Post Deliverable"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Introduction 
+
+The purpose of this assignment is to answer a series of questions related to the transformation of data using analytic or simulation method. 
+
+## Background
+
+To finish this assignment, we need to rely on some functions. "pgamma","plnorm", and "punif" are required to generate the CDF figure; "dgamma", "dlnorm", and "dunif" are required to generate the PDF figure; "rgamma", "rlnorm", and "runif" are required to generate random variables; "qgamma","qlnorm", and "qunif" are required to get value based on a given quantile.
+
+# Methods
+
+```{r}
+suppressPackageStartupMessages(require(tidyverse))
+suppressPackageStartupMessages(require(ggplot2))
+```
+
+## Part1
+
+### Question 1
+I prefer using analytic way to calculate the expected value of these three distribution. 
+Expected value formula for gamma distribution $$\int_{0}^{\infty}x\cdot\frac{1}{\left(k-1\right)!t^{k}}x^{\left(k-1\right)}e^{\left(-\frac{x}{t}\right)}\ dx$$
+Expected value formula for logNormal distribution $$\int_{0}^{\infty}x\cdot\frac{1}{xt\sqrt{2\pi}}\exp\left(-\frac{\left(\ln\left(x\right)-m\right)^{2}}{2t^{2}}\right)\ dx$$
+Expected value formula for uniform distribution $$\int_{\min}^{\max}x\cdot\frac{1}{\max-\min}\ dx$$
+
+```{r}
+# define a sequence for future distribution
+x <- seq(0,40,0.1)
+
+# gamma
+gamma_CDF <- data.frame(x = x, gamma = pgamma(x,shape=3,scale=1), label = rep("CDF",length(x)))
+gamma_PDF <- data.frame(x = x, gamma = dgamma(x,shape=3,scale=1), label = rep("PDF",length(x)))  
+# find the median x which satisfies P(X<=x) = 0.5 and P(X>=x) = 0.5 (quantile = 0.5)
+median_gamma <- qgamma(0.5,3,1)
+# using desmos based on the above formula and replace infinity with 40
+mean_gamma <- 3 
+# represent the figure
+rbind(gamma_CDF,gamma_PDF) %>%
+  ggplot(aes(x = x , y = gamma, group = label,col=label)) +
+  geom_line()+
+  # median point
+  annotate("point", x=median_gamma, y = 0.5)+
+  # explanation of the median point
+  annotate("text", x=10, y = 0.55, label = paste("Median:",round(median_gamma,4)))+
+  # mean point
+  annotate("point", x= mean_gamma, y = 0) +
+  # explanation of the mean point
+  annotate("text", x= 4, y = 0.05, label = paste("Mean:",mean_gamma))+
+  geom_hline(yintercept = 0.5,linetype='dashed', col = 'green')+
+  labs(
+    x = "Gamma x",
+    y = "Density"
+  )
+
+
+# logNormal
+logNormal_CDF <- data.frame(x = x, logNormal = plnorm(x,-1,1), label = rep("CDF",length(x)))
+logNormal_PDF <- data.frame(x = x, logNormal = dlnorm(x,-1,1), label = rep("PDF",length(x)))
+# find the median x which satisfies P(X<=x) = 0.5 and P(X>=x) = 0.5 (quantile = 0.5)
+median_logNormal <- qlnorm(0.5,-1,1)
+# using desmos based on the above formula and replace infinity with 40
+mean_logNormal <- 0.606462351047
+# represent the figure
+rbind(logNormal_CDF,logNormal_PDF) %>%
+  ggplot(aes(x = x , y = logNormal, group = label,col=label)) +
+  geom_line() +
+  # median point 
+  annotate("point", x=median_logNormal, y = 0.5)+
+  annotate("text", x=10, y = 0.55, label = paste("Median:",round(median_logNormal,4)))+
+  # mean point 
+  annotate("point", x= mean_logNormal, y = 0) +
+  annotate("text", x= 4, y = 0.05, label = paste("Mean:",round(mean_logNormal,4)))+
+  geom_hline(yintercept = 0.5,linetype='dashed', col = 'green')+
+  labs(
+    x = "LogNormal x",
+    y = "Density"
+  )
+
+
+# uniform
+uniform_CDF <- data.frame(x = x, uniform = punif(x,0,12), label = rep("CDF",length(x)))
+uniform_PDF <- data.frame(x = x, uniform = dunif(x,0,12), label = rep("PDF",length(x)))
+# find the median x which satisfies P(X<=x) = 0.5 and P(X>=x) = 0.5 (quantile = 0.5)
+median_uniform <- qunif(0.5,0,12)
+# calculated by hand 
+mean_uniform <- (12*1/12)*12/2
+# represent the figure
+rbind(uniform_CDF,uniform_PDF) %>%
+  ggplot(aes(x = x , y = uniform, group = label,col=label)) +
+  geom_line() +
+  # median point 
+  annotate("point", x=median_uniform, y = 0.5)+
+  annotate("text", x=11, y = 0.55, label = paste("Median:",median_uniform))+
+  # mean point
+  annotate("point", x= mean_uniform, y = 0) +
+  annotate("text", x= 4, y = 0.05, label = paste("Mean:",mean_uniform))+
+  geom_hline(yintercept = 0.5,linetype='dashed', col = 'green')+
+   labs(
+    x = "Uniform x",
+    y = "Density"
+  )
+
+```
+\
+For all three figures, the X-axis is the X value and the Y-axis is the density value. For median of each distribution, I used "qgamma", "qlnorm", and "qunif" to find it given quantile 0.5. For mean of each distribution, I used the above formula and let "desmos" calculate results. The range of x is [0,40]
+
+### Question 2
+Transformation of random variable $$Y=log(x)$$
+This transformation is monotonically increasing. Thus for the CDF $$F(Y) = F(X)$$
+For the PDF $$f\left(Y\right)=\frac{dF\left(y\right)}{dy}\ =\ \frac{dF\left(x\right)}{dx}=\frac{dF\left(x\right)}{dx}\cdot\frac{dx}{dy}=\frac{f\left(X\right)}{\frac{dy}{dx}} = \frac{f\left(X\right)}{\frac{d\log\left(x\right)}{dx}}\ =\frac{f\left(X\right)}{\frac{1}{x}}=x\cdot f\left(X\right)$$
+
+For gamma distribution, after transformation, expected value formula is $$\int_{0}^{\infty\ }\log\left(x\right)\cdot\frac{1}{\left(k-1\right)!t^{k}}x^{\left(k-1\right)}e^{\left(-\frac{x}{t}\right)}\ dx$$
+
+For logNormal distribution, after transformation, expected value formula is $$\int_{0}^{\infty}\log\left(x\right)\cdot\frac{1}{xt\sqrt{2\pi}}\exp\left(-\frac{\left(\ln\left(x\right)-m\right)^{2}}{2t^{2}}\right)\ dx$$
+
+For uniform distribution, after transformation, expected value formula is $$\int_{\min}^{\max}\log\left(x\right)\cdot\frac{1}{\max-\min}\ dx$$
+```{r}
+x <- seq(0,40,0.1)
+# gamma
+gamma_CDF_log <- data.frame(x = log(x), gamma_log = pgamma(x,shape=3,scale=1), label = rep("CDF",length(x)))
+gamma_PDF_log <- data.frame(x = log(x), gamma_log = x * dgamma(x,shape=3,scale=1), label = rep("PDF",length(x))) 
+# Y = log(X)
+median_gamma_log <- log(qgamma(0.5,3,1))
+# using desmos based on the above formula and replace infinity with 40
+mean_gamma_log <-0.922784335098
+rbind(gamma_CDF_log,gamma_PDF_log) %>%
+  ggplot(aes(x = x, y = gamma_log, group = label,col=label)) +
+  geom_line()+
+  annotate("point", x=median_gamma_log, y = 0.5)+
+  annotate("text", x=2, y = 0.55, label = paste("Median:",round(median_gamma_log,4)))+
+  annotate("point", x= mean_gamma_log, y = 0) +
+  annotate("text", x= 2.5, y = 0.05, label = paste("Mean:",round(mean_gamma_log,4)))+
+  geom_hline(yintercept = 0.5,linetype='dashed', col = 'green')+
+  labs(
+    x = "Gamma log(x)",
+    y = "Density"
+  )
+
+  
+# lognormal
+logNormal_CDF_log <- data.frame(x = log(x), logNormal_log = plnorm(x,-1,1), label = rep("CDF",length(x)))
+logNormal_PDF_log <- data.frame(x = log(x), logNormal_log = x*dlnorm(x,-1,1), label = rep("PDF",length(x)))
+# find y when quantile = 0.5
+logNormal_median_log <- log(qlnorm(0.5,-1,1))
+# using desmos based on the above formula and replace infinity with 40
+logNormal_mean_log <- -1.00000533767
+rbind(logNormal_CDF_log,logNormal_PDF_log) %>%
+  ggplot(aes(x = x , y = logNormal_log, group = label,col=label)) +
+  geom_line()+
+  annotate("point", x=logNormal_median_log, y = 0.5)+
+  annotate("text", x=0, y = 0.55, label = paste("Median:",round(logNormal_median_log,4)))+
+  annotate("point", x= logNormal_mean_log, y = 0) +
+  annotate("text", x= 0, y = 0.05, label = paste("Mean:",round(logNormal_mean_log,4))) +
+  geom_hline(yintercept = 0.5,linetype='dashed', col = 'green')+
+  labs(
+    x = "LogNormal log(x)",
+    y = "Density"
+  )
+
+
+# uniform
+uniform_CDF_log <- data.frame(x = log(x), uniform_log = punif(x,0,12), label = rep("CDF",length(x)))
+uniform_PDF_log <- data.frame(x = log(x), uniform_log = x * dunif(x,0,12), label = rep("PDF",length(x)))
+# find y when quantile = 0.5
+uniform_median_log <- log(qunif(0.5,0,12))
+# using desmos based on the above formula and replace infinity with 40
+uniform_mean_log <-1.48490664979
+rbind(uniform_CDF_log,uniform_PDF_log) %>%
+  ggplot(aes(x = x , y = uniform_log, group = label,col=label)) +
+  geom_line()+
+  annotate("point", x=uniform_median_log, y = 0.5)+
+  annotate("text", x=3, y = 0.55, label = paste("Median:",round(uniform_median_log,4)))+
+  annotate("point", x= uniform_mean_log , y = 0) +
+  annotate("text", x= 2.5, y = 0.05, label = paste("Mean:",round(uniform_mean_log ,4)))+
+  geom_hline(yintercept = 0.5,linetype='dashed', col = 'green')+
+  labs(
+    x = "Uniform log(x)",
+    y = "Density"
+  )
+```
+\
+For all three figures, the X-axis is the Y = log(X) value and the Y-axis is the density value. For median of each distribution, after transformation, the CDF of Y is still the same as the CDF of X. Thus, I used "qgamma", "qlnorm", and "qunif" to find it given quantile 0.5 and get their logarithmic value because of the transformation. For mean of each distribution, I used the above formula and let "desmos" calculate results. The range of x is [0,40].
+
+### Question 3
+Arithmetic mean $$\frac{\left(x_{1}+x_{2}+...+x_{n}\right)}{n}$$
+Geometric mean $$\left(x_{1}\cdot x_{2}\cdot...\cdot x_{n}\right)^{\frac{1}{n}}$$
+How to calculate geometric mean $$e^{\frac{\left(\log x_{1}+\log x_{2}+...+\log x_{n}\right)}{n}}=e^{\left(\frac{1}{n}\cdot\log\left(x_{1}x_{2}...x_{n}\right)\right)}=e^{\log\left(\left(x_{1}\cdot x_{2}\cdot...\cdot x_{n}\right)^{\frac{1}{n}}\right)}=\left(x_{1}\cdot x_{2}\cdot...\cdot x_{n}\right)^{\frac{1}{n}}$$
+
+```{r}
+# set seed
+set.seed(2)
+# generate gamma arithmetic mean with label in order to distinguish
+gamma_arthi <- data.frame(index = 1:1000,value = replicate(1000,mean(rgamma(100,shape=3,scale=1))),label = rep("arthi",1000))
+# generate gamma geometric mean
+gamma_geo <- data.frame(index = 1:1000,value = replicate(1000,exp(mean(log(rgamma(100,shape=3,scale=1))))),label = rep("geo",1000))
+# draw the figure
+rbind(gamma_arthi,gamma_geo) %>%
+  ggplot(aes(x=index,y=value,group=label, color=label)) +
+  geom_point()+
+  # reference line
+  geom_smooth(method = "lm")+
+  labs(
+    x = "Index",
+    y = "Gamma Mean Value"
+  )
+
+# generate logNormal arthimetic mean
+logNormal_arthi <- data.frame(index = 1:1000, value = replicate(1000,mean(rlnorm(100,-1,1))),label = rep("arthi",1000))
+# generate logNormal geometric mean
+logNormal_geo <- data.frame(index = 1:1000,value=replicate(1000,exp(mean(log(rlnorm(100,-1,1))))),label=rep("geo",1000))
+# draw the figure
+rbind(logNormal_arthi,logNormal_geo) %>%
+  ggplot(aes(x=index,y=value,group=label, color=label)) +
+  geom_point()+
+  # reference line
+  geom_smooth(method = "lm")+
+  labs(
+    x = "Index",
+    y = "LogNormal Mean Value"
+  )
+
+# generate uniform arthimetic mean
+uniform_arthi <- data.frame(index = 1:1000,value = replicate(1000,mean(runif(100,0,12))), label = rep("arthi",1000))
+# generate uniform geometric mean
+uniform_geo <- data.frame(index = 1:1000,value = replicate(1000,exp(mean(log(runif(100,0,12))))),label = rep("geo",1000))
+# draw the figure
+rbind(uniform_arthi,uniform_geo) %>%
+  ggplot(aes(x=index,y=value,group=label, color=label)) +
+  geom_point()+
+  # reference line
+  geom_smooth(method = "lm")+
+  labs(
+    x = "Index",
+    y = "Uniform Mean Value"
+  )
+```
+\
+For all three figures, the X-axis is the index of 1000 replications and the Y-axis is the corresponding arithmetic and geometric mean of each distribution. Based on the 
+reference line of all three figures, arithmetic mean is always larger than geometric mean.
+
+### Question 4
+```{r}
+# set seed
+set.seed(2)
+# gamma arithmetic mean
+gamma_arthi_value <- replicate(1000,mean(rgamma(100,shape=3,scale=1)))
+# gamma geometric mean
+gamma_geo_value <- replicate(1000,exp(mean(log(rgamma(100,shape=3,scale=1)))))
+# find difference
+gamma_diff = gamma_arthi_value-gamma_geo_value
+# draw the figure
+data.frame(gamma_diff) %>%
+  ggplot(aes(x=gamma_diff))+
+  geom_histogram(bins=30,
+                 col = "black",
+                 alpha=0.5,
+                 breaks = seq(0,1.2,by = 0.05)) +
+  labs(
+    x="Gamma Difference",
+    y="Count"
+  )
+
+# logNormal arithmetic mean
+logNormal_arthi_value <- replicate(1000,mean(rlnorm(100,-1,1)))
+# logNormal geometric mean
+logNormal_geo_value <- replicate(1000,exp(mean(log(rlnorm(100,-1,1)))))
+# find the difference 
+logNormal_diff = logNormal_arthi_value-logNormal_geo_value
+# draw the figure
+data.frame(logNormal_diff) %>%
+  ggplot(aes(x=logNormal_diff))+
+  geom_histogram(bins=30,
+                 col = "black",
+                 alpha=0.5,
+                 breaks=seq(0,0.6,by=0.05))+
+  labs(
+    x="LogNormal Difference",
+    y="Count"
+  )
+
+# uniform arithmetic mean
+uniform_arthi_value <- replicate(1000,mean(runif(300,0,12)))
+# uniform geometric mean
+uniform_geo_value <- replicate(1000,exp(mean(log(runif(300,0,12)))))
+# find the difference 
+uniform_diff = uniform_arthi_value-uniform_geo_value
+# draw the figure
+data.frame(uniform_diff) %>%
+  ggplot(aes(x=uniform_diff))+
+  geom_histogram(bins=30,
+                 col = "black",
+                 alpha=0.5,
+                 breaks=seq(0,2.6,by=0.05))+
+  labs(
+    x="Uniform Difference",
+    y="Count"
+  )
+```
+\
+For all three figures, the X-axis is the difference between arithmetic mean and geometric mean, the Y-axis id the count of each difference. From all three figures, arithmetic mean is always larger or equal to geometric mean. 
+\
+Proof of this conclusion: suppose calculate the arithmetic mean and geometric mean of two values a and b. 
+\
+Arithmetic mean $$\frac{\left(a+b\right)}{2}$$
+Geometric mean $$\sqrt{ab}$$
+Arithmetic mean^2 - Geometric mean^2
+$$\left(\frac{\left(a+b\right)}{2}\right)^{2}\ \ -\ \left(\sqrt{ab}\right)^{2}=\frac{\left(a^{2}+2ab+b^{2}\right)}{4}-\frac{4ab}{4}=\frac{\left(a^{2}-2ab+b^{2}\right)}{4}=\frac{\left(a-b\right)^{2}}{4}\ge0$$
+
+## Part 3
+Start from Part 1 Question 1 and 2:
+Gamma distribution: $$log(E[x])  = log(3) = 1.09861228867 > E[log(x)] = 0.922784335098 $$
+LogNormal distribution: $$log(E[x])  = log(0.606462351047) = −0.500112628292
+ > E[log(x)] = -1.00000533767 $$
+ Uniform distribution: $$log(E[x])  = log(6) = 1.79175946923
+ > E[log(x)] = 1.48490664979$$
+Assume Relationship:
+$$E[log(X)] ≤  log(E(X))$$
+Proof of assumption
+\
+According to the Jensens inequality: for any concave function f, $$E(f(X)) ≤ f(E(X))$$
+A function is concave if it's second derivative is negative
+\
+Proof f: x -> log(x) is a concave function
+$$ f'' = (log(x))'' = (\frac{1}{x})' = -\frac{1}{x^2} <0 $$
+
+
