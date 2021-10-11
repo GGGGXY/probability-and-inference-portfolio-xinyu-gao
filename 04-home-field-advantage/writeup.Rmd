@@ -27,14 +27,18 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-require(ggplot2)
-require(dplyr)
-require(data.table)
+suppressPackageStartupMessages(require(ggplot2))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(data.table))
+
 # Get all possible outcomes
 apo <- fread("all-possible-world-series-outcomes.csv")
 ```
 
 # Question one
+With home field advantage, the probability of wining the World Series using analytic method can not be regarded as a problem about negative binomial random variable because the it violates Bernoulli's constant probability property. Thus, we need to list all possible results of the game and calculate the probability of each result.
+
+Without home field advantage, the probability of wining the World Series using analytic method can be regarded as a problem about negative binomial random variable. Negative binomial random variable is to study probability of x fails before yth success problem. If the Braves wants to win, it should win four games in the World Series. Before the 4th success, the Braves can lose 0,1,2, or 3 times because the World Series has 7 rounds. Thus we need to know probabilities of 0,1,2,or 3 fails before 4th success and add them up. This can be achieved by using "pnbinom" function. pnbinom(x,y,p) calculates the  probability of 0,1,...,x fails before yth success given p success probability and add them up.
 ```{r}
 # with home advantage
 # Home field indicator
@@ -81,6 +85,7 @@ abs(pnbinom(3,4,0.55)-apo[,sum(p),overall_outcome][[2]][1])
 Using analytic way, the probability of the Braves winning World Series with home field advantage is 0.604221, without home field advantage is 0.6082878. The difference between is 0.004066825.
 
 # Question two
+Using simulation method to compare the probability of wining the World Series with and without home field advantage, we also need to list all possible results of the game because simulation is based on a given probability of success to simulate the results that will be obtained in reality, it will change in every round. For simulation, we need to use "rbinom" function. rbinom(x,y,p) means x observations of the number of successes in y independent trials given p probability of success and the simulated probability will be mean(rbinom(x,y,p)/y). With home advantage, the success probability p will change based on the playing stadium. Without home advantage, the success probability p is fixed.
 ```{r}
 # P_B
 pb <- 0.55
@@ -134,6 +139,8 @@ abs(advantage - without_advantage)
 Using simulation way, the probability of the Braves winning World Series with home field advantage is 0.6080325, without home field advantage is 0.6172659. The difference between is 0.009233402.
 
 # Question three
+Absolute Error:|p̂−p|
+Relative Error:|p̂−p|/p
 ```{r}
 # with home field advantage
 p_advantage_simulation_3 <- apo[,sum(p_simulation_advantage),overall_outcome][[2]][1]
