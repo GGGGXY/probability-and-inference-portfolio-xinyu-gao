@@ -17,10 +17,10 @@ The purpose of this assignment is to use simulation and analytic methods to comp
 
 ## Background
 
-Without home field advantage, the probability of wining the World Series using analytic method can be regarded as a problem about negative binomial random variable. Negative binomial random variable is to study probability of x fails before yth success problem. If the Braves wants to win, it should win four games in the World Series. Before the 4th success, the Braves can lose 0,1,2, or 3 times because the World Series has 7 rounds. Thus we need to know probabilities of 0,1,2,or 3 fails before 4th success and add them up. This can be achieved by using "pnbinom" function. pnbinom(x,y,p) calculates the  probability of 0,1,...,x fails before yth success given p success probability and add them up. With home field advantage, the probability of wining the World Series using analytic method can not be regarded as a problem about negative binomial random variable because the it violates Bernoulli's constant probability property. Thus, we need to list all possible results of the game and calculate the probability of each result. Using simulation method to compare the probability of wining the World Series with and without home field advantage, we also need to list all possible results of the game because simulation is based on a given probability of success to simulate the results that will be obtained in reality, it will change in every round. For simulation, we need to use "rbinom" function. rbinom(x,y,p) means x observations of the number of successes in y independent trials given p probability of success and the simulated probability will be mean(rbinom(x,y,p)/y). Question four and five wants to study the relationship between the difference in probabilities (with vs without home field advantage) and P(B)/advantage factor. In this case, the analytic method is a good choice because it is completely based on theory and is fixed.
+<span style="color:red">1. Negative binomial random variable is to study probability of x fails before yth success problem. It can't be used if the success probability is not constant.
+2. rbinom(x,y,p) means x observations of the number of successes in y independent trials given p probability of success and the simulated probability will be mean(rbinom(x,y,p)/y)
 
 # Methods
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -35,10 +35,10 @@ suppressPackageStartupMessages(require(data.table))
 apo <- fread("all-possible-world-series-outcomes.csv")
 ```
 
-# Question one
-With home field advantage, the probability of wining the World Series using analytic method can not be regarded as a problem about negative binomial random variable because the it violates Bernoulli's constant probability property. Thus, we need to list all possible results of the game and calculate the probability of each result.
+## Question one
+<span style="color:red"> With home field advantage, the probability of wining the World Series using analytic method can not be regarded as a problem about negative binomial random variable because the it violates Bernoulli's constant probability property. Thus, we need to list all possible results of the game and calculate the probability of each result.
 
-Without home field advantage, the probability of wining the World Series using analytic method can be regarded as a problem about negative binomial random variable. Negative binomial random variable is to study probability of x fails before yth success problem. If the Braves wants to win, it should win four games in the World Series. Before the 4th success, the Braves can lose 0,1,2, or 3 times because the World Series has 7 rounds. Thus we need to know probabilities of 0,1,2,or 3 fails before 4th success and add them up. This can be achieved by using "pnbinom" function. pnbinom(x,y,p) calculates the  probability of 0,1,...,x fails before yth success given p success probability and add them up.
+<span style="color:red"> Without home field advantage, the probability of wining the World Series using analytic method can be regarded as a problem about negative binomial random variable. Negative binomial random variable is to study probability of x fails before yth success problem. If the Braves wants to win, it should win four games in the World Series. Before the 4th success, the Braves can lose 0,1,2, or 3 times because the World Series has 7 rounds. Thus we need to know probabilities of 0,1,2,or 3 fails before 4th success and add them up. This can be achieved by using "pnbinom" function. pnbinom(x,y,p) calculates the  probability of 0,1,...,x fails before yth success given p success probability and add them up.
 ```{r}
 # with home advantage
 # Home field indicator
@@ -84,8 +84,8 @@ abs(pnbinom(3,4,0.55)-apo[,sum(p),overall_outcome][[2]][1])
 \
 Using analytic way, the probability of the Braves winning World Series with home field advantage is 0.604221, without home field advantage is 0.6082878. The difference between is 0.004066825.
 
-# Question two
-Using simulation method to compare the probability of wining the World Series with and without home field advantage, we also need to list all possible results of the game because simulation is based on a given probability of success to simulate the results that will be obtained in reality, it will change in every round. For simulation, we need to use "rbinom" function. rbinom(x,y,p) means x observations of the number of successes in y independent trials given p probability of success and the simulated probability will be mean(rbinom(x,y,p)/y). With home advantage, the success probability p will change based on the playing stadium. Without home advantage, the success probability p is fixed.
+## Question two
+<span style="color:red"> Using simulation method to compare the probability of wining the World Series with and without home field advantage, we also need to list all possible results of the game because simulation is based on a given probability of success to simulate the results that will be obtained in reality, it will change in every round. For simulation, we need to use "rbinom" function. rbinom(x,y,p) means x observations of the number of successes in y independent trials given p probability of success and the simulated probability will be mean(rbinom(x,y,p)/y). With home advantage, the success probability p will change based on the playing stadium. Without home advantage, the success probability p is fixed.
 ```{r}
 # P_B
 pb <- 0.55
@@ -138,9 +138,10 @@ abs(advantage - without_advantage)
 \
 Using simulation way, the probability of the Braves winning World Series with home field advantage is 0.6080325, without home field advantage is 0.6172659. The difference between is 0.009233402.
 
-# Question three
-Absolute Error:|p̂−p|
-Relative Error:|p̂−p|/p
+## Question three
+<span style="color:red"> Absolute Error:|p̂−p|
+\
+<span style="color:red"> Relative Error:|p̂−p|/p
 ```{r}
 # with home field advantage
 p_advantage_simulation_3 <- apo[,sum(p_simulation_advantage),overall_outcome][[2]][1]
@@ -160,9 +161,10 @@ rel_without_advantage
 ```
 With home field advantage, the absolute error is 0.003811549, the relative error is 0.006308204. Without home field advantage, the absolute error is 0.008978126, the relative error is  0.01475967.
 
-# Question four
+## Question four
+<span style="color:red"> Question four wants to study the relationship between the difference in probabilities (with vs without home field advantage) and P(B). In this case, the analytic method is a good choice because it is completely based on theory and is fixed. Firstly, I will define a sequence of possible probabilities. The range is very important otherwise the probability may larger than 1 or smaller than 0 because of the advantage multiplier. Then for each possible probability, i will use the same method as Question one to calculate the probability of the Braves winning the game with and without home field advantage . Finally, I will calculate the difference and plot it with the corresponding probability.
 ```{r}
-# define the possibility list, the range is very important otherwise the probability may largee than 1 or smaller than 0
+# define the possibility list, the range is very important otherwise the probability may larger than 1 or smaller than 0 because of the advantage multiplier.
 pb_list <- seq(0.1,0.9,0.01)
 # store the difference
 diff_ques_four <- rep(0,length(pb_list))
@@ -198,13 +200,14 @@ data.frame(pb_list, diff_ques_four) %>%
   geom_point()+
    labs(
     x = "Probability of the Braves winning a head-to-head matchup",
-    y = "Difference in probabilities (with vs without home field advantage)"
+    y = "Absolute Difference in probabilities (with vs without home field advantage)"
   )
 ```
 \
-The X-axis is the P(B) and the Y-axis is the difference in probabilities with and without home field advantage. The graphic shows three demarcation points, these three demarcation points are about 0.36, 0.58 and 0.72. Before 0.36 and between 0.58 and 0.72, the image has an upward trend. Between 0.36 and 0.58 and after 0.72, the image has an downward trend.
+The X-axis is the P(B) and the Y-axis is the <span style="color:red"> absolute </span> difference in probabilities with and without home field advantage. The graphic shows three demarcation points, these three demarcation points are about 0.36, 0.58 and 0.72. Before 0.36 and between 0.58 and 0.72, the image has an upward trend. Between 0.36 and 0.58 and after 0.72, the image has an downward trend.
 
-# Question five
+## Question five
+<span style="color:red"> Question five wants to study the relationship between the difference in probabilities (with vs without home field advantage) and advantage factor. In this case, the analytic method is a good choice because it is completely based on theory and is fixed. Firstly, I will define a sequence of possible advantage factors. The range is very important otherwise the probability may larger than 1 or smaller than 0. Then for each possible advantage factor, I will use the same method as Question one to calculate the probability of the Braves winning the game with and without home field advantage . Finally, I will calculate the difference and plot it with the corresponding advantage factor.
 ```{r}
 # define the advantage factor list, the 
 advantage_list <- seq(1.1,1.8,0.01)
@@ -240,9 +243,9 @@ data.frame(advantage_list, diff_ques_five) %>%
   geom_point()+
   labs(
     x = "Advantage Factor",
-    y = "Difference in probabilities (with vs without home field advantage)"
+    y = "Absolute difference in probabilities (with vs without home field advantage)"
   )
 
 ```
 \
-The X-axis is the advantage factor and the Y-axis is the difference in probabilities with and without home field advantage. The difference keeps increasing with the increase of advantage factor
+The X-axis is the advantage factor and the Y-axis is the <span style="color:red"> absolute </span> difference in probabilities with and without home field advantage. The difference keeps increasing with the increase of advantage factor
