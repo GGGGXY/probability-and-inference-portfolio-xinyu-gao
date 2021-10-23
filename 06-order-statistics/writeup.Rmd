@@ -1,0 +1,274 @@
+---
+title: "Title of Blog Post Deliverable"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Introduction 
+
+This assignment is going to explore how to use analytic and simulation ways to develop functions for the distribution of order statistics. 
+
+# Methods
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(tgsify))
+```
+
+## Question 1
+$$f_k(x)=k{n \choose k}[F(x)]^{k−1}[1−F(x)]^{n−k}f(x)$$
+Based on the question introduction, n=200,k=100(median), and this is about the standard normal distribution
+```{r}
+# according to the above formula (k = 100, n = 200)
+dorder <- function(x){
+  100*
+    choose(200,100)*
+    (pnorm(x, mean=0, sd =1))^(100-1)*
+    (1-pnorm(x, mean=0, sd =1))^(200-100)*
+    dnorm(x, mean=0, sd =1)
+}
+# plot of the function
+curve(
+  dorder(x),
+  -1,
+  1,
+  ylab = "Density",
+  main = "PDF Of Standard Normal Distribution's Median"
+)
+```
+
+## Question 2
+$$F_{k}(x)=\sum_{j=k}^{N}{n \choose j}[F(x)]^j[1−F(x)]^{n−j}$$
+Based on the question introduction, n=200,k=100, and this is about the standard normal distribution
+```{r}
+# according to the above formula(k = 100, n = 200)
+porder <- function(x){
+  pbinom(100-1, 200, pnorm(x, mean=0, sd=1), lower.tail = FALSE)
+}
+curve(
+  porder(x),
+  -1,
+  1,
+  ylab = "Probability",
+  main = "CDF Of Standard Normal Distribution's Median"
+)
+```
+
+## Question3
+"qorder" is the inverse of "porder" 
+\
+Step1: create a look up table with value and its corresponding probability. The probability is calculated using "porder"
+\
+Step2: find the approximate function of the relationship between probability and value using "approxfun". In this function, probability is the input and value is the output
+```{r}
+qorder <- function(x){
+  # look up table
+  lt <- data.frame(x=seq(-4,15,by=0.01)) %>%
+  mutate(p = porder(x)) 
+  # function of the relationship between probability and value
+  qf <-approxfun(lt$p,lt$x,ties="ordered")
+  # using this function to find corresponding value given probability x
+  qf(x)
+}
+
+curve(qorder(x),
+      0,
+      1,
+      ylab= "x",
+      xlab="quantile",
+      main = "Quantile Of Standard Normal Distribution's Median")
+```
+
+## Question 4
+Use "ecdf" and "porder" function to finish this question
+```{r}
+set.seed(1)
+bmi <- rnorm(200, mean=0, sd=1) %>% median 
+# the output is a function
+bmi_ecdf <- ecdf(bmi)  
+plot(bmi_ecdf, do.points = FALSE, col = "red", lwd = 3, main="ecdf VS CDF",xlim=c(-0.3,0.3))
+# use porder to get the plot of the CDF
+curve(porder(x),lwd = 3, col = "blue", add=TRUE)
+
+# define the property of the legend
+legend(
+    "topleft"
+  , c("ECDF","CDF")
+  , lwd = 3
+  , col = c("red","blue")
+  , bty = "n"
+)
+```
+
+## Question 5
+Generate histogram of median sampling distribution and use "dorder" to get the theoretical PDF
+```{r}
+# get 10000 sample
+median_norm <- rep(NA,10000)
+for (i in seq_along(median_norm))
+{
+  # calculate median for each sample
+  median_norm[i] = rnorm(200,mean = 0, sd=1) %>% median
+}
+# plot 10000 sample
+hist(
+  median_norm,
+  breaks = 100,
+  main = "Sampling distribution VS PDF",
+  xlab = "x",
+  freq = FALSE
+)
+# use "dorder" to get the plot of PDF
+curve(
+  dorder(x),
+  lwd = 3, 
+  col = "blue",
+  add=TRUE
+)
+```
+
+## Question 6
+```{r}
+# get 10000 sample
+median_norm_2 <- rep(NA,10000)
+for (i in seq_along(median_norm_2)){
+  # calculate median for each sample
+  median_norm_2[i]  <- rnorm(200,mean=0, sd=1) %>% median
+}
+# sort the list
+median_norm_2 <- median_norm_2 %>% sort()
+# want to explore 199 quantiles except 0 and 1 quantile
+y <- rep(NA, 199)
+for (i in seq_along(y))
+{
+  y[i] = median_norm_2[10000*i/200]
+}
+# compatible with x
+x = qorder((1:199)/200)
+
+plot(x,y
+     ,asp=1
+     ,main = "Median Theoretical Quantile VS Sample Quantile"
+     ,xlab = "Theoretical quantile"
+     ,ylab = "Sample quantile"
+     )
+abline(0,1)
+
+```
+\
+Based on the above graphic, the plotted points almost fall along the line y=x. Thus the simulated median agree with the theoretical sampling distribution
+
+## Question 7
+The updated function is the version of corresponding function from Question 1 using k to replace 100.
+```{r}
+# n=200,k=k
+dorder_anyOrder <- function(x,k){
+  k*
+    choose(200,k)*
+    (pnorm(x, mean=0, sd =1))^(k-1)*
+    (1-pnorm(x, mean=0, sd =1))^(200-k)*
+    dnorm(x, mean=0, sd =1)
+}
+
+# n=200,k=k
+porder_anyOrder <- function(x,k){
+  pbinom(k-1, 200, pnorm(x, mean=0, sd=1), lower.tail = FALSE)
+}
+
+# n = 200,k=k
+qorder_anyOrder <- function(x,k){
+  lt <- data.frame(x=seq(-4,15,by=0.01)) %>%
+     mutate(p = porder_anyOrder(x,k)) 
+  qf <-approxfun(lt$p,lt$x, ties ="ordered")
+  qf(x)
+}
+```
+
+## Question 8
+```{r}
+# get 10000 samples
+max_norm <- rep(NA,10000)
+for (i in seq_along(max_norm)){
+  # calculate the max for each sample
+  max_norm[i] = rnorm(200,mean=0, sd=1) %>% max
+}
+# sort the list
+max_norm <- max_norm %>% sort()
+
+# want to explore 199 quantiles
+y <- rep(NA,199)
+for (i in seq_along(y)){
+  y[i] = max_norm[10000*i/200]
+}
+# use function "qorder_anyOrder" with k = 200(max)
+x<-qorder_anyOrder((1:199)/200,200)
+plot(x,y, asp = 1,
+     xlab = "Theoretical quantile", 
+     ylab = "Sample quantile",
+     main =  "Max Theoretical Quantile VS Sample Quantile")
+abline(0,1)
+```
+\
+Based on the above graphic, the plotted points almost fall along the line y=x. Thus the simulated max agree with the theoretical sampling distribution.
+
+## Question 9
+The new function needs two more variables "dist" and  "...". "dist" contains the name information of the distribution and "..." contains the parameter information of the distribution
+```{r}
+# combine two strings
+`%|%` <- function(a,b) paste0(a,b)
+
+dorder_anyOrderDistri <- function(x,k,dist,...){
+  # CDF
+  F <- eval(parse(text ="p" %|% dist))
+  # PDF
+  f <- eval(parse(text ="d" %|% dist))
+  k*
+    choose(200,k)*
+    (F(x, ...))^(k-1)*
+    (1-F(x, ...))^(200-k)*
+    f(x, ...)
+}
+
+porder_anyOrderDistri <- function(x,k,dist,...){
+  # CDF
+  F <- eval(parse(text ="p" %|% dist))
+  pbinom(k-1, 200, F(x, ...), lower.tail = FALSE)
+}
+
+qorder_anyOrderDistri <- function(x,k,dist,...){
+  lt <- data.frame(x=seq(-4,15,by=0.01)) %>%
+     mutate(p = porder_anyOrderDistri(x,k,dist,...)) 
+  qf <-approxfun(lt$p,lt$x)
+  qf(x)
+}
+```
+
+## Question 10
+Based on the question introduction, n=200,k=1(min), and this is about the standard normal distribution.
+```{r}
+#Use the newly modified functions to plot the probability and density functions for the sample min (N=200)
+# CDF
+curve(
+  porder_anyOrderDistri(x,1,"norm",mean=0,sd=1),
+  ylab = "probability",
+  xlim = c(-6,1),
+  main = "CDF Of Standard Normal Distribution's Min"
+)
+# PDF
+curve(
+  dorder_anyOrderDistri(x,1,"norm", mean=0,sd=1),
+  ylab = "density",
+  xlim = c(-6,1),
+  main ="PDF Of Standard Normal Distribution's Median"
+)
+```
+
