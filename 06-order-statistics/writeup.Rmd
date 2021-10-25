@@ -72,7 +72,7 @@ Step2: find the approximate function of the relationship between probability and
 ```{r}
 qorder <- function(x){
   # look up table
-  lt <- data.frame(x=seq(-4,15,by=0.01)) %>%
+  lt <- data.frame(x=seq(-4,4,by=0.01)) %>%
   mutate(p = porder(x)) 
   # function of the relationship between probability and value
   qf <-approxfun(lt$p,lt$x,ties="ordered")
@@ -91,11 +91,16 @@ curve(qorder(x),
 ## Question 4
 Use "ecdf" and "porder" function to finish this question
 ```{r}
-set.seed(1)
-bmi <- rnorm(200, mean=0, sd=1) %>% median 
+# simulation
+median_norm <- rep(NA,10000)
+for (i in seq_along(median_norm))
+{
+  # calculate median for each sample
+  median_norm[i] = rnorm(200,mean = 0, sd=1) %>% median
+}
 # the output is a function
-bmi_ecdf <- ecdf(bmi)  
-plot(bmi_ecdf, do.points = FALSE, col = "red", lwd = 3, main="ecdf VS CDF",xlim=c(-0.3,0.3))
+bmi_ecdf <- ecdf(median_norm)  
+plot(bmi_ecdf, do.points = FALSE, col = "red", lwd = 3, main="ecdf VS CDF")
 # use porder to get the plot of the CDF
 curve(porder(x),lwd = 3, col = "blue", add=TRUE)
 
