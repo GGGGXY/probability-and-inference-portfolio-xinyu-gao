@@ -173,13 +173,17 @@ How to calculate geometric mean $$e^{\frac{\left(\log x_{1}+\log x_{2}+...+\log 
 
 #### Gamma
 ```{r}
-set.seed(2)
-# arithmetic mean
-gamma_arthi <- data.frame(arthmetic = replicate(1000,mean(rgamma(100,shape=3,scale=1))))
-# geometric mean
-gamma_geo <- data.frame(geometric = replicate(1000,exp(mean(log(rgamma(100,shape=3,scale=1))))))
+# generate the sample
+sample <- data.frame(replicate(1000,rgamma(100,shape=3,scale=1)))
+# calculate the arthmetic and geometric mean
+gamma_arthi <- rep(NA,1000)
+gamma_geo <- rep(NA,1000)
+for (i in seq_along(gamma_arthi)){
+  gamma_arthi[i] <- mean(sample[[i]])
+  gamma_geo[i] <- exp(mean(log(sample[[i]])))
+}
 # generate the graphic
-cbind(gamma_arthi,gamma_geo) %>%
+data.frame(arthmetic = gamma_arthi,geometric = gamma_geo) %>%
   ggplot(aes(x=arthmetic,y=geometric)) +
   geom_point()+
   geom_smooth(method = "lm")+
@@ -192,13 +196,17 @@ cbind(gamma_arthi,gamma_geo) %>%
 
 #### LogNormal
 ```{r}
-set.seed(2)
-# arithmetic mean
-logNormal_arthi <- data.frame(arthmetic = replicate(1000,mean(rlnorm(100,-1,1))))
-# geometric mean
-logNormal_geo <- data.frame(geometric = replicate(1000,exp(mean(log(rlnorm(100,-1,1))))))
+# generate the sample
+sample <- data.frame(replicate(1000,rlnorm(100,-1,1)))
+# calculate the arthmetic and geometric mean
+logNormal_arthi <- rep(NA,1000)
+logNormal_geo <- rep(NA,1000)
+for (i in seq_along(logNormal_arthi)){
+  logNormal_arthi[i] <- mean(sample[[i]])
+  logNormal_geo[i] <- exp(mean(log(sample[[i]])))
+}
 # generate the graphic
-cbind(logNormal_arthi,logNormal_geo) %>%
+data.frame(arthmetic = logNormal_arthi,geometric=logNormal_geo) %>%
   ggplot(aes(x=arthmetic,y=geometric)) +
   geom_point()+
   geom_smooth(method = "lm")+
@@ -211,13 +219,17 @@ cbind(logNormal_arthi,logNormal_geo) %>%
 
 #### Uniform
 ```{r}
-set.seed(2)
-# arithmetic mean
-uniform_arthi <- data.frame(arthmetic = replicate(1000,mean(runif(100,0,12))))
-# geometric mean
-uniform_geo <- data.frame(geometric = replicate(1000,exp(mean(log(runif(100,0,12))))))
+# generate the sample
+sample <- data.frame(replicate(1000,runif(100,0,12)))
+# calculate the arthmetic and geometric mean
+uniform_arthi <- rep(NA,1000)
+uniform_geo <- rep(NA,1000)
+for (i in seq_along(uniform_arthi)){
+  uniform_arthi[i] <- mean(sample[[i]])
+  uniform_geo[i] <- exp(mean(log(sample[[i]])))
+}
 # generate the graphic
-cbind(uniform_arthi,uniform_geo) %>%
+data.frame(arthmetic = uniform_arthi,geometric = uniform_geo) %>%
   ggplot(aes(x=arthmetic,y=geometric)) +
   geom_point()+
   geom_smooth(method = "lm")+
