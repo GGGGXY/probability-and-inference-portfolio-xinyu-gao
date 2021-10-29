@@ -186,7 +186,7 @@ for (i in seq_along(gamma_arthi)){
 data.frame(arthmetic = gamma_arthi,geometric = gamma_geo) %>%
   ggplot(aes(x=arthmetic,y=geometric)) +
   geom_point()+
-  geom_smooth(method = "lm")+
+  geom_abline(intercept = 0, slope=1)+
   labs(
     x= "Arthmetic Mean",
     y= "Geomeric Mean",
@@ -209,7 +209,7 @@ for (i in seq_along(logNormal_arthi)){
 data.frame(arthmetic = logNormal_arthi,geometric=logNormal_geo) %>%
   ggplot(aes(x=arthmetic,y=geometric)) +
   geom_point()+
-  geom_smooth(method = "lm")+
+  geom_abline(intercept = 0, slope=1)+
   labs(
     x= "Arthmetic Mean",
     y= "Geomeric Mean",
@@ -232,7 +232,7 @@ for (i in seq_along(uniform_arthi)){
 data.frame(arthmetic = uniform_arthi,geometric = uniform_geo) %>%
   ggplot(aes(x=arthmetic,y=geometric)) +
   geom_point()+
-  geom_smooth(method = "lm")+
+  geom_abline(intercept = 0, slope=1)+
   labs(
     x= "Arthmetic Mean",
     y= "Geomeric Mean",
