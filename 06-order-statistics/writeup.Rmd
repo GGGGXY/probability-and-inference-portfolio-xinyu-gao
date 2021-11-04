@@ -16,7 +16,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 # Introduction 
 
-This assignment is going to explore how to use analytic and simulation ways to develop functions for the distribution of order statistics. 
+This assignment is going to explore how to use analytic and simulation ways to develop functions for the distribution of order statistics. For the generated density function, using the histogram to test it; for the generated probability function, using the ecdf to test it; for the generated quantile function, using QQ plot to test it. It also explores how to develop previously defined density, probability, and quantile functions into more advanced versions that can be applied to any distribution.
+
+## Background
+
+In this assignment, we need to know the formula for how to generate the density and probability function of order statistics, which will be mentioned in detail below. Also, we need to know how to generate quantile function from the probability function. I use the approfun() function to achieve it. For the testing part, we need to use histogram, ecdf, and QQ plot to achieve tasks. We need to use "..." to update density, probability, and quantile functions to make them able to deal with various kinds of distributions. 
 
 # Methods
 ```{r}
@@ -45,6 +49,8 @@ curve(
   main = "PDF Of Standard Normal Distribution's Median"
 )
 ```
+\
+This is the PDF of the standard normal distribution' median
 
 ## Question 2
 $$F_{k}(x)=\sum_{j=k}^{N}{n \choose j}[F(x)]^j[1−F(x)]^{n−j}$$
@@ -62,6 +68,8 @@ curve(
   main = "CDF Of Standard Normal Distribution's Median"
 )
 ```
+\
+This is the CDF of the standard normal distribution' median
 
 ## Question3
 "qorder" is the inverse of "porder" 
@@ -85,8 +93,11 @@ curve(qorder(x),
       1,
       ylab= "x",
       xlab="quantile",
+      ylim = c(-0.5,0.5),
       main = "Quantile Of Standard Normal Distribution's Median")
 ```
+\
+This is the quantile function of standard normal distribution' median, which is actually the inverse of the CDF
 
 ## Question 4
 Use "ecdf" and "porder" function to finish this question
@@ -113,6 +124,8 @@ legend(
   , bty = "n"
 )
 ```
+\
+Based on the graphic, the line of ecdf is basically consistent with the line of the generated probability function, which proves that the probability function is likely to be accurate.
 
 ## Question 5
 Generate histogram of median sampling distribution and use "dorder" to get the theoretical PDF
@@ -140,6 +153,8 @@ curve(
   add=TRUE
 )
 ```
+\
+Based on the graphic, the shape of histogram is basically consistent with the shape of the generated density function，which proves that the density function is likely to be accurate.
 
 ## Question 6
 ```{r}
@@ -170,7 +185,7 @@ abline(0,1)
 
 ```
 \
-Based on the above graphic, the plotted points almost fall along the line y=x. Thus the simulated median agree with the theoretical sampling distribution
+Based on the graphic, the plotted points almost fall along the line y=x. Thus the simulated median agree with the theoretical sampling distribution, which proves that the quantile function is likely to be accurate.
 
 ## Question 7
 The updated function is the version of corresponding function from Question 1 using k to replace 100.
@@ -223,7 +238,7 @@ plot(x,y, asp = 1,
 abline(0,1)
 ```
 \
-Based on the above graphic, the plotted points almost fall along the line y=x. Thus the simulated max agree with the theoretical sampling distribution.
+Based on the above graphic, the plotted points almost fall along the line y=x. Thus the simulated max agree with the theoretical sampling distribution, which proves that the updated quantile function is likely to be accurate.
 
 ## Question 9
 The new function needs two more variables "dist" and  "...". "dist" contains the name information of the distribution and "..." contains the parameter information of the distribution
@@ -273,7 +288,8 @@ curve(
   dorder_anyOrderDistri(x,1,"norm", mean=0,sd=1),
   ylab = "density",
   xlim = c(-6,1),
-  main ="PDF Of Standard Normal Distribution's Median"
+  main ="PDF Of Standard Normal Distribution's Min"
 )
 ```
-
+\
+The first graphic is the CDF of standard normal distribution' min and the second graphic is the PDF of standard normal distribution' min
