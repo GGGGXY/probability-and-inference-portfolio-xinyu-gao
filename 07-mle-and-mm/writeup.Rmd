@@ -1,0 +1,466 @@
+---
+title: "Title of Blog Post Deliverable"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction 
+
+The purpose of this assignment is to use MM and MLE to model distributions of adult females' glycohemoglobin and height.
+
+## Background
+
+This assignments studied three distributions. They are respectively normal, gamma, and weibull distributions. Firstly, for each distribution, we will use MM and MLE to calculate their parameters. Details about how to calculate their parameters will be mentioned lately. Then, we will use histogram to test the density function;
+use ecdf to test the probability function; use QQ plot to test the quantile function. Finally, based on the testing results, we can conclude whether these three distributions are suitable to model adult females' glycohemoglobin and height, which one is the most suitable, and stuff like that.
+
+# Methods
+```{r}
+suppressPackageStartupMessages(require(tidyverse))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(stats4))
+```
+
+```{r}
+Hmisc::getHdata(nhgh)
+d1 <- nhgh %>% 
+  filter(sex == "female") %>% 
+  filter(age >= 18) %>% 
+  select(gh, ht) %>% 
+  filter(1:n()<=1000) 
+
+gh <- as.numeric(d1 %>% pull(gh))
+ht <- as.numeric(d1 %>% pull(ht))
+```
+
+## MM
+The first step to use MM is to find which type of distribution can be used to describe the data. In this case, we have three choices normal, gamma and, weibull distribution. Then based on the distribution type we need to find the number of unknown parameters. In this case, all three distributions have two parameters to be calculated, which means that we need two sample moments. We can use mean and variance to calculate them because inversely for each distribution, its two parameters can be used to calculate mean and variance. Thus, we need to calculate the mean and variance of the sample glycohemoglobin and height first. 
+```{r}
+# calculate mean and variance of the sample
+x_gh <- mean(gh)
+s2_gh <- var(gh)
+x_ht <- mean(ht)
+s2_ht <- var(ht)
+```
+### Calculate parameters
+
+#### Normal
+mean = sample mean \
+standard deviation = sample standard deviation
+```{r}
+nor_mean_hat_gh <- x_gh
+nor_sd_hat_gh <- s2_gh^.5
+nor_mean_hat_ht <- x_ht
+nor_sd_hat_ht <- s2_ht^.5
+```
+
+#### Gamma
+sample mean = shape * scale \
+sample variance = shape * scale^2 \
+scale = sample variance / sample mean \
+shape = sample mean^2 / sample variance
+```{r}
+gamma_scale_hat_gh <- s2_gh/x_gh
+gamma_shape_hat_gh <- x_gh^2/s2_gh
+gamma_scale_hat_ht <- s2_ht/x_ht
+gamma_shape_hat_ht <- x_ht^2/s2_ht
+```
+
+#### Weibull
+It's difficult to calculate by myself. Thus I directly used formulas 
+```{r}
+wb_shape_hat_gh <- (s2_gh^.5/x_gh)^(-1.086)
+wb_scale_hat_gh <- x_gh/gamma(1+1/wb_shape_hat_gh)
+wb_shape_hat_ht <- (s2_ht^.5/x_ht)^(-1.086)
+wb_scale_hat_ht <- x_ht/gamma(1+1/wb_shape_hat_ht)
+```
+
+### Pdf vs Histogram
+
+#### Glycohemoglobin
+```{r}
+hist(gh, breaks=20,freq=FALSE, main ="PDF OF gh")
+curve(dnorm(x, mean = nor_mean_hat_gh, sd = nor_sd_hat_gh), add=TRUE, lwd = 3, col="red")
+curve(dgamma(x, scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh), add=TRUE, lwd = 3, col="orange")
+curve(dweibull(x, scale = wb_scale_hat_gh,shape = wb_shape_hat_gh ), add=TRUE, lwd = 3, col="blue")
+legend (
+     "topright"
+     ,c('Normal','Gamma','Weibull')
+     ,col = c('red','orange','blue')
+     ,lwd =3
+     ,bty = "n"
+)
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because their pdf distributions are not very close to the histogram.
+
+#### Height
+```{r}
+hist(ht, breaks=20,freq=FALSE, main ="PDF OF ht")
+curve(dnorm(x, mean = nor_mean_hat_ht, sd = nor_sd_hat_ht), add=TRUE, lwd = 3, col="red")
+curve(dgamma(x, scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht), add=TRUE, lwd = 3, col="orange")
+curve(dweibull(x, scale = wb_scale_hat_ht,shape = wb_shape_hat_ht), add=TRUE, lwd = 3, col="blue")
+legend (
+     "topright"
+     ,c('Normal','Gamma','Weibull')
+     ,col = c('red','orange','blue')
+     ,lwd =3
+     ,bty = "n"
+)
+```
+\
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution is not a very good choice to model it.
+
+### Cdf vs Ecdf
+#### Glycohemoglobin
+```{r}
+plot(ecdf(gh))
+curve(pnorm(x, mean = nor_mean_hat_gh, sd = nor_sd_hat_gh), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, scale = wb_scale_hat_gh,shape = wb_shape_hat_gh ), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because their cdf distributions are not very close to the ecdf distribution.
+
+#### Height
+```{r}
+plot(ecdf(ht))
+curve(pnorm(x, mean = nor_mean_hat_ht, sd = nor_sd_hat_ht), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, scale = wb_scale_hat_ht,shape = wb_shape_hat_ht), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+```
+\
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution has a little deviation from the ecdf distribution.
+
+### Quantile vs QQ plot
+#### Glycohemoglobin
+```{r}
+x_normal_gh <- qnorm((1:200)/200,mean = nor_mean_hat_gh, sd = nor_sd_hat_gh)
+x_gamma_gh <- qgamma((1:200)/200,scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh)
+x_wb_gh <- qweibull((1:200)/200,scale = wb_scale_hat_gh,shape = wb_shape_hat_gh)
+y_gh <- quantile(gh,probs = (1:200)/200)
+plot(x_normal_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal gh")
+abline(0,1)
+plot(x_gamma_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma gh")
+abline(0,1)
+plot(x_wb_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull gh")
+abline(0,1)
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because  most of their points are not on the line y=x.
+
+#### Height
+```{r}
+x_normal_ht <- qnorm((1:200)/200,mean = nor_mean_hat_ht, sd = nor_sd_hat_ht)
+x_gamma_ht <- qgamma((1:200)/200,scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht)
+x_wb_ht <- qweibull((1:200)/200,scale = wb_scale_hat_ht,shape = wb_shape_hat_ht)
+y_ht <- quantile(ht,probs = (1:200)/200)
+plot(x_normal_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal ht" )
+abline(0,1)
+plot(x_gamma_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma ht")
+abline(0,1)
+plot(x_wb_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull ht")
+abline(0,1)
+```
+\
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but some points in the Weibull distribution deviate from the y=x line
+
+### Median
+#### Glycohemoglobin
+```{r}
+# calulate median for different distributions
+median_norm_gh <- qnorm(0.5,mean = nor_mean_hat_gh, sd = nor_sd_hat_gh)
+median_gamma_gh <- qgamma(0.5,scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh)
+median_wb_gh <- qweibull(0.5,scale = wb_scale_hat_gh,shape = wb_shape_hat_gh)
+
+plot(ecdf(gh))
+curve(pnorm(x, mean = nor_mean_hat_gh, sd = nor_sd_hat_gh), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, scale = wb_scale_hat_gh,shape = wb_shape_hat_gh ), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+) 
+# add vertical lines to indicate distributions' median and sample median
+abline(v =median_norm_gh, col = "red")
+abline(v =median_gamma_gh, col = "orange")
+abline(v =median_wb_gh, col = "blue")
+abline(v = quantile(gh,0.5),col="black")
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because their medians have obvious deviations from the sample median.
+
+#### Height
+```{r}
+# ht
+median_norm_ht <- qnorm(0.5,mean = nor_mean_hat_ht, sd = nor_sd_hat_ht)
+median_gamma_ht <- qgamma(0.5,scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht)
+median_wb_ht <- qweibull(0.5,scale = wb_scale_hat_ht,shape = wb_shape_hat_ht)
+
+plot(ecdf(ht))
+curve(pnorm(x, mean = nor_mean_hat_ht, sd = nor_sd_hat_ht), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, scale = wb_scale_hat_ht,shape = wb_shape_hat_ht), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+abline(v =median_norm_ht, col = "red")
+abline(v =median_gamma_ht, col = "orange")
+abline(v =median_wb_ht, col = "blue")
+abline(v = quantile(ht,0.5),col="black")
+```
+\ 
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution's median has an obvious deviation from the sample median.
+
+## MLE
+The first step to use MLE is to find which type of distribution can be used to describe the data. In this case, we have three choices normal, gamma and, weibull distribution. Then, we need to decide parameters of these distributions. MLE is a method that tries a lot of possible parameters and find the parameters that can maximum the probability of obtaining the sample data. In other word, we need to find parameters that can maximum the following formula $$ f(x_1,x_2,...,x_n|parameters) $$ In R, we need to use mle to achieve this task. mle needs two primary parameters:1. negative likelihood function which needs to be minimized 2. starting  point for the coefficient vector.
+
+### Calculate parameters
+```{r}
+# norm and gh
+# add "-" to be compatible with mle's requirement
+ll_norm_gh  <- function(mean,sd){
+  -sum(dnorm(gh,mean = mean,sd = sd,log=T))
+}
+z_norm_gh <- mle(minuslogl=ll_norm_gh, start=list(mean=1,sd=1),
+                 method = "L-BFGS-B",
+                 lower = c(0,0.01))
+
+# norm and ht
+ll_norm_ht  <- function(mean,sd){
+  -sum(dnorm(ht,mean = mean,sd = sd,log=T))
+}
+z_norm_ht <- mle(minuslogl=ll_norm_ht, start=list(mean=1,sd=1),
+                 method = "L-BFGS-B",
+                 lower = c(0,0.01))
+
+# gamma and gh
+ll_gamma_gh  <- function(shape,scale){
+  -sum(dgamma(gh, shape = shape ,scale = scale,log=T))
+}
+z_gamma_gh <- mle(minuslogl=ll_gamma_gh, start=list(shape=1,scale=1),lower = c(0,0.01))
+
+# gamma and ht
+ll_gamma_ht <- function(shape,scale){
+  -sum(dgamma(ht, shape = shape ,scale = scale,log=T))
+}
+z_gamma_ht <- mle(minuslogl=ll_gamma_ht, start=list(shape=1,scale=1),lower = c(0,0.01))
+
+# wb and gh
+ll_wb_gh  <- function(shape,scale){
+  -sum(dweibull(gh, shape = shape ,scale = scale,log=T))
+}
+z_wb_gh <- mle(minuslogl=ll_wb_gh, start=list(shape=1,scale=1),lower = c(0,0.01))
+
+# wb and ht
+ll_wb_ht  <- function(shape,scale){
+  -sum(dweibull(ht, shape = shape ,scale = scale,log=T))
+}
+z_wb_ht <- mle(minuslogl=ll_wb_ht, start=list(shape=1,scale=1),lower = c(0,0.01))
+```
+
+### Pdf vs Histogram
+
+#### Glycohemoglobin
+```{r}
+hist(gh,breaks=20,freq=FALSE)
+curve(dnorm(x,mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2]),lwd=3,add=TRUE,col="red")
+curve(dgamma(x,shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2]),lwd=3,add=TRUE,col="orange")
+curve(dweibull(x,shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2]),lwd=3,add=TRUE,col="blue")
+legend(
+    "right"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because their pdf distributions are not very close to the histogram.
+
+#### Height
+```{r}
+hist(ht,breaks=20,freq=FALSE)
+curve(dnorm(x,mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2]),lwd=3,add=TRUE,col="red")
+curve(dgamma(x,shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2]),lwd=3,add=TRUE,col="orange")
+curve(dweibull(x,shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2]),lwd=3,add=TRUE,col="blue")
+legend(
+    "right"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+```
+\
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution is not a very good choice to model it.
+
+### Cdf vs Ecdf
+
+#### Glycohemoglobin
+```{r}
+plot(ecdf(gh))
+curve(pnorm(x, mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2]), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2]), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2]), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because their cdf distributions are not very close to the ecdf distribution.
+
+#### Height
+```{r}
+plot(ecdf(ht))
+curve(pnorm(x, mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2]), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2]), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2]), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+```
+\
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution has a little deviation from the ecdf distribution.
+
+### Quantile vs QQ plot
+#### Glycohemoglobin
+```{r}
+x_normal_gh <- qnorm((1:200)/200,mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2])
+x_gamma_gh <- qgamma((1:200)/200,shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2])
+x_wb_gh <- qweibull((1:200)/200, shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2])
+y_gh <- quantile(gh,probs = (1:200)/200)
+
+plot(x_normal_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal gh")
+abline(0,1)
+
+plot(x_gamma_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma gh")
+abline(0,1)
+
+plot(x_wb_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull gh")
+abline(0,1)
+```
+\
+From the above graphics, for the Glycohemoglobin, these three distributions are not perfect to model it because most of their points are not on the line y=x.
+
+#### Height
+```{r}
+x_normal_ht <- qnorm((1:200)/200, mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2])
+x_gamma_ht <- qgamma((1:200)/200,shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2])
+x_wb_ht <- qweibull((1:200)/200,shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2])
+y_ht <- quantile(ht,probs = (1:200)/200)
+
+plot(x_normal_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal ht" )
+abline(0,1)
+
+plot(x_gamma_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma ht")
+abline(0,1)
+
+plot(x_wb_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull ht")
+abline(0,1)
+
+```
+\
+From the above graphic, for the height, normal and gamma distributions are good at modeling it but some points in the Weibull distribution deviate from the y=x line
+
+### Median
+I use qnorm, qgamma,and qweibull to calculate the median from the estimated distribution because we already know their parameters. The median is the value which quantile is 0.5
+#### Glycohemoglobin
+```{r}
+# gh
+median_norm_gh <- qnorm(0.5,mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2])
+median_gamma_gh <- qgamma(0.5,shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2])
+median_wb_gh <- qweibull(0.5,shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2])
+
+plot(ecdf(gh))
+curve(pnorm(x, mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2]), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2]), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2]), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+) 
+abline(v =median_norm_gh, col = "red")
+abline(v =median_gamma_gh, col = "orange")
+abline(v =median_wb_gh, col = "blue")
+abline(v = quantile(gh,0.5),col="black")
+```
+\
+From the above graphic, for the Glycohemoglobin, these three distributions are not perfect to model it because their medians have obvious deviations from the sample median.
+
+#### Height
+```{r}
+# ht
+median_norm_ht <- qnorm(0.5,mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2])
+median_gamma_ht <- qgamma(0.5,shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2])
+median_wb_ht <- qweibull(0.5,shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2])
+
+plot(ecdf(ht))
+curve(pnorm(x, mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2]), add=TRUE, lwd = 3, col="red")
+curve(pgamma(x, shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2]), add=TRUE, lwd = 3, col="orange")
+curve(pweibull(x, shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2]), add=TRUE, lwd = 3, col="blue")
+legend(
+    "bottomright"
+    ,c('Normal','Gamma','Weibull')
+    ,col = c('red','orange','blue')
+    ,lwd =3
+    ,bty = "n"
+)
+abline(v =median_norm_ht, col = "red")
+abline(v =median_gamma_ht, col = "orange")
+abline(v =median_wb_ht, col = "blue")
+abline(v = quantile(ht,0.5),col="black")
+```
+\
+graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution’s median has an obvious deviation from the sample median.
+
+# Conclusion
+In this case, MM and MLE give the same result that for modeling adult females' glycohemoglobin, normal,gamma, and weibull distributions are not suitable; for modeling adult female's height, normal and gamma distributions work well but weibull distribution is not very suitable. 
+
+# Take-home messages
+1. MM and MLE are parametric methods to make statistical estimation. In other word, they estimate distributions' parameters
+2. MM is more direct and easy. 
+3. MLE is more complicated but it's less sensitive to outliers
+2. The prerequisite of using MM and MLE is to select a suitable distribution model otherwise, like the glycohemoglobin example, the final result will not be good.
