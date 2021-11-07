@@ -89,12 +89,12 @@ wb_scale_hat_ht <- x_ht/gamma(1+1/wb_shape_hat_ht)
 
 #### Glycohemoglobin
 ```{r}
-hist(gh, breaks=20,freq=FALSE, main ="PDF OF gh")
+hist(gh, breaks=20,freq=FALSE, main ="Pdf vs Histogram (gh MM)")
 curve(dnorm(x, mean = nor_mean_hat_gh, sd = nor_sd_hat_gh), add=TRUE, lwd = 3, col="red")
 curve(dgamma(x, scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh), add=TRUE, lwd = 3, col="orange")
 curve(dweibull(x, scale = wb_scale_hat_gh,shape = wb_shape_hat_gh ), add=TRUE, lwd = 3, col="blue")
 legend (
-     "topright"
+     "right"
      ,c('Normal','Gamma','Weibull')
      ,col = c('red','orange','blue')
      ,lwd =3
@@ -106,12 +106,12 @@ From the above graphic, for the Glycohemoglobin, these three distributions are n
 
 #### Height
 ```{r}
-hist(ht, breaks=20,freq=FALSE, main ="PDF OF ht")
+hist(ht, breaks=20,freq=FALSE, main ="Pdf vs Histogram (ht MM)")
 curve(dnorm(x, mean = nor_mean_hat_ht, sd = nor_sd_hat_ht), add=TRUE, lwd = 3, col="red")
 curve(dgamma(x, scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht), add=TRUE, lwd = 3, col="orange")
 curve(dweibull(x, scale = wb_scale_hat_ht,shape = wb_shape_hat_ht), add=TRUE, lwd = 3, col="blue")
 legend (
-     "topright"
+     "right"
      ,c('Normal','Gamma','Weibull')
      ,col = c('red','orange','blue')
      ,lwd =3
@@ -124,12 +124,12 @@ From the above graphic, for the height, normal and gamma distributions are good 
 ### Cdf vs Ecdf
 #### Glycohemoglobin
 ```{r}
-plot(ecdf(gh))
+plot(ecdf(gh),main="Cdf vs Ecdf (gh MM)")
 curve(pnorm(x, mean = nor_mean_hat_gh, sd = nor_sd_hat_gh), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, scale = wb_scale_hat_gh,shape = wb_shape_hat_gh ), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -141,12 +141,12 @@ From the above graphic, for the Glycohemoglobin, these three distributions are n
 
 #### Height
 ```{r}
-plot(ecdf(ht))
+plot(ecdf(ht),main="Cdf vs Ecdf (ht MM)")
 curve(pnorm(x, mean = nor_mean_hat_ht, sd = nor_sd_hat_ht), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, scale = wb_scale_hat_ht,shape = wb_shape_hat_ht), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -163,11 +163,11 @@ x_normal_gh <- qnorm((1:200)/200,mean = nor_mean_hat_gh, sd = nor_sd_hat_gh)
 x_gamma_gh <- qgamma((1:200)/200,scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh)
 x_wb_gh <- qweibull((1:200)/200,scale = wb_scale_hat_gh,shape = wb_shape_hat_gh)
 y_gh <- quantile(gh,probs = (1:200)/200)
-plot(x_normal_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal gh")
+plot(x_normal_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal(gh MM)")
 abline(0,1)
-plot(x_gamma_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma gh")
+plot(x_gamma_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma (gh MM)")
 abline(0,1)
-plot(x_wb_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull gh")
+plot(x_wb_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull (gh MM)")
 abline(0,1)
 ```
 \
@@ -179,17 +179,18 @@ x_normal_ht <- qnorm((1:200)/200,mean = nor_mean_hat_ht, sd = nor_sd_hat_ht)
 x_gamma_ht <- qgamma((1:200)/200,scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht)
 x_wb_ht <- qweibull((1:200)/200,scale = wb_scale_hat_ht,shape = wb_shape_hat_ht)
 y_ht <- quantile(ht,probs = (1:200)/200)
-plot(x_normal_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal ht" )
+plot(x_normal_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal(ht MM)" )
 abline(0,1)
-plot(x_gamma_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma ht")
+plot(x_gamma_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma (ht MM)")
 abline(0,1)
-plot(x_wb_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull ht")
+plot(x_wb_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull (ht MM)")
 abline(0,1)
 ```
 \
 From the above graphic, for the height, normal and gamma distributions are good at modeling it but some points in the Weibull distribution deviate from the y=x line
 
 ### Median
+I use qnorm, qgamma,and qweibull to calculate the median from the estimated distribution because we already know their parameters. The median is the value which quantile is 0.5
 #### Glycohemoglobin
 ```{r}
 # calulate median for different distributions
@@ -197,12 +198,12 @@ median_norm_gh <- qnorm(0.5,mean = nor_mean_hat_gh, sd = nor_sd_hat_gh)
 median_gamma_gh <- qgamma(0.5,scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh)
 median_wb_gh <- qweibull(0.5,scale = wb_scale_hat_gh,shape = wb_shape_hat_gh)
 
-plot(ecdf(gh))
+plot(ecdf(gh),main="Median (gh MM)")
 curve(pnorm(x, mean = nor_mean_hat_gh, sd = nor_sd_hat_gh), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, scale = gamma_scale_hat_gh, shape = gamma_shape_hat_gh), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, scale = wb_scale_hat_gh,shape = wb_shape_hat_gh ), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -224,12 +225,12 @@ median_norm_ht <- qnorm(0.5,mean = nor_mean_hat_ht, sd = nor_sd_hat_ht)
 median_gamma_ht <- qgamma(0.5,scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht)
 median_wb_ht <- qweibull(0.5,scale = wb_scale_hat_ht,shape = wb_shape_hat_ht)
 
-plot(ecdf(ht))
+plot(ecdf(ht),main="Median (ht MM)")
 curve(pnorm(x, mean = nor_mean_hat_ht, sd = nor_sd_hat_ht), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, scale = gamma_scale_hat_ht, shape = gamma_shape_hat_ht), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, scale = wb_scale_hat_ht,shape = wb_shape_hat_ht), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -240,7 +241,7 @@ abline(v =median_gamma_ht, col = "orange")
 abline(v =median_wb_ht, col = "blue")
 abline(v = quantile(ht,0.5),col="black")
 ```
-\ 
+\
 From the above graphic, for the height, normal and gamma distributions are good at modeling it but the weibull distribution's median has an obvious deviation from the sample median.
 
 ## MLE
@@ -294,7 +295,7 @@ z_wb_ht <- mle(minuslogl=ll_wb_ht, start=list(shape=1,scale=1),lower = c(0,0.01)
 
 #### Glycohemoglobin
 ```{r}
-hist(gh,breaks=20,freq=FALSE)
+hist(gh,breaks=20,freq=FALSE,main = "Pdf vs Histogram (gh MLE)")
 curve(dnorm(x,mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2]),lwd=3,add=TRUE,col="red")
 curve(dgamma(x,shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2]),lwd=3,add=TRUE,col="orange")
 curve(dweibull(x,shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2]),lwd=3,add=TRUE,col="blue")
@@ -311,7 +312,7 @@ From the above graphic, for the Glycohemoglobin, these three distributions are n
 
 #### Height
 ```{r}
-hist(ht,breaks=20,freq=FALSE)
+hist(ht,breaks=20,freq=FALSE,,main = "Pdf vs Histogram (ht MLE)")
 curve(dnorm(x,mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2]),lwd=3,add=TRUE,col="red")
 curve(dgamma(x,shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2]),lwd=3,add=TRUE,col="orange")
 curve(dweibull(x,shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2]),lwd=3,add=TRUE,col="blue")
@@ -330,12 +331,12 @@ From the above graphic, for the height, normal and gamma distributions are good 
 
 #### Glycohemoglobin
 ```{r}
-plot(ecdf(gh))
+plot(ecdf(gh), main ="Cdf vs Ecdf (gh MLE)")
 curve(pnorm(x, mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2]), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2]), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2]), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -347,12 +348,12 @@ From the above graphic, for the Glycohemoglobin, these three distributions are n
 
 #### Height
 ```{r}
-plot(ecdf(ht))
+plot(ecdf(ht),main ="Cdf vs Ecdf (ht MLE)")
 curve(pnorm(x, mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2]), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2]), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2]), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -370,13 +371,13 @@ x_gamma_gh <- qgamma((1:200)/200,shape = coef(z_gamma_gh)[1],scale = coef(z_gamm
 x_wb_gh <- qweibull((1:200)/200, shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2])
 y_gh <- quantile(gh,probs = (1:200)/200)
 
-plot(x_normal_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal gh")
+plot(x_normal_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal (gh MLE)")
 abline(0,1)
 
-plot(x_gamma_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma gh")
+plot(x_gamma_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma (gh MLE)")
 abline(0,1)
 
-plot(x_wb_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull gh")
+plot(x_wb_gh,y_gh,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull (gh MLE)")
 abline(0,1)
 ```
 \
@@ -389,13 +390,13 @@ x_gamma_ht <- qgamma((1:200)/200,shape = coef(z_gamma_ht)[1],scale = coef(z_gamm
 x_wb_ht <- qweibull((1:200)/200,shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2])
 y_ht <- quantile(ht,probs = (1:200)/200)
 
-plot(x_normal_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal ht" )
+plot(x_normal_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Normal (ht MLE)" )
 abline(0,1)
 
-plot(x_gamma_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma ht")
+plot(x_gamma_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile",main = "QQ Gamma (ht MLE)")
 abline(0,1)
 
-plot(x_wb_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull ht")
+plot(x_wb_ht,y_ht,asp=1,xlab = "Estimated quantile",ylab ="Sample quantile", main = "QQ Weilbull (ht MLE)")
 abline(0,1)
 
 ```
@@ -411,12 +412,12 @@ median_norm_gh <- qnorm(0.5,mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2])
 median_gamma_gh <- qgamma(0.5,shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2])
 median_wb_gh <- qweibull(0.5,shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2])
 
-plot(ecdf(gh))
+plot(ecdf(gh),main="Median (gh MLE)")
 curve(pnorm(x, mean = coef(z_norm_gh)[1],sd = coef(z_norm_gh)[2]), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, shape = coef(z_gamma_gh)[1],scale = coef(z_gamma_gh)[2]), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, shape = coef(z_wb_gh)[1],scale = coef(z_wb_gh)[2]), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
@@ -437,12 +438,12 @@ median_norm_ht <- qnorm(0.5,mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2])
 median_gamma_ht <- qgamma(0.5,shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2])
 median_wb_ht <- qweibull(0.5,shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2])
 
-plot(ecdf(ht))
+plot(ecdf(ht),,main="Median (ht MLE)")
 curve(pnorm(x, mean = coef(z_norm_ht)[1],sd = coef(z_norm_ht)[2]), add=TRUE, lwd = 3, col="red")
 curve(pgamma(x, shape = coef(z_gamma_ht)[1],scale = coef(z_gamma_ht)[2]), add=TRUE, lwd = 3, col="orange")
 curve(pweibull(x, shape = coef(z_wb_ht)[1],scale = coef(z_wb_ht)[2]), add=TRUE, lwd = 3, col="blue")
 legend(
-    "bottomright"
+    "right"
     ,c('Normal','Gamma','Weibull')
     ,col = c('red','orange','blue')
     ,lwd =3
