@@ -59,9 +59,13 @@ mean = sample mean \
 standard deviation = sample standard deviation
 ```{r}
 nor_mean_hat_gh <- x_gh
+print(paste("Mean of normal distribution of Glycohemoglobin:",nor_mean_hat_gh))
 nor_sd_hat_gh <- s2_gh^.5
+print(paste("Standard deviation of normal distribution of Glycohemoglobin:",nor_sd_hat_gh))
 nor_mean_hat_ht <- x_ht
+print(paste("Mean of normal distribution of Height:",nor_mean_hat_ht))
 nor_sd_hat_ht <- s2_ht^.5
+print(paste("Standard deviation of normal distribution of Height:",nor_sd_hat_ht))
 ```
 
 #### Gamma
@@ -71,18 +75,26 @@ scale = sample variance / sample mean \
 shape = sample mean^2 / sample variance
 ```{r}
 gamma_scale_hat_gh <- s2_gh/x_gh
+print(paste("Scale of gamma distribution of Glycohemoglobin:",gamma_scale_hat_gh))
 gamma_shape_hat_gh <- x_gh^2/s2_gh
+print(paste("Shape of gamma distribution of Glycohemoglobin:",gamma_shape_hat_gh))
 gamma_scale_hat_ht <- s2_ht/x_ht
+print(paste("Scale of gamma distribution of Height:",gamma_scale_hat_ht))
 gamma_shape_hat_ht <- x_ht^2/s2_ht
+print(paste("Shape of gamma distribution of Height:",gamma_shape_hat_ht))
 ```
 
 #### Weibull
 It's difficult to calculate by myself. Thus I directly used formulas 
 ```{r}
 wb_shape_hat_gh <- (s2_gh^.5/x_gh)^(-1.086)
+print(paste("Shape of Weibull distribution of Glycohemoglobin:",wb_shape_hat_gh))
 wb_scale_hat_gh <- x_gh/gamma(1+1/wb_shape_hat_gh)
+print(paste("Scale of Weibull distribution of Glycohemoglobin:",wb_scale_hat_gh))
 wb_shape_hat_ht <- (s2_ht^.5/x_ht)^(-1.086)
+print(paste("Shape of Weibull distribution of Height:",wb_shape_hat_ht))
 wb_scale_hat_ht <- x_ht/gamma(1+1/wb_shape_hat_ht)
+print(paste("Scale of Weibull distribution of Height:",wb_scale_hat_ht))
 ```
 
 ### Pdf vs Histogram
@@ -258,6 +270,9 @@ z_norm_gh <- mle(minuslogl=ll_norm_gh, start=list(mean=1,sd=1),
                  method = "L-BFGS-B",
                  lower = c(0,0.01))
 
+print(paste("Mean of normal distribution of Glycohemoglobin:",coef(z_norm_gh)[1]))
+print(paste("Standard deviation of normal distribution of Glycohemoglobin:",coef(z_norm_gh)[2]))
+
 # norm and ht
 ll_norm_ht  <- function(mean,sd){
   -sum(dnorm(ht,mean = mean,sd = sd,log=T))
@@ -266,11 +281,18 @@ z_norm_ht <- mle(minuslogl=ll_norm_ht, start=list(mean=1,sd=1),
                  method = "L-BFGS-B",
                  lower = c(0,0.01))
 
+print(paste("Mean of normal distribution of Height:",coef(z_norm_ht)[1]))
+print(paste("Standard deviation of normal distribution of Height:",coef(z_norm_ht)[2]))
+
 # gamma and gh
 ll_gamma_gh  <- function(shape,scale){
   -sum(dgamma(gh, shape = shape ,scale = scale,log=T))
 }
 z_gamma_gh <- mle(minuslogl=ll_gamma_gh, start=list(shape=1,scale=1),lower = c(0,0.01))
+
+print(paste("Shape of gamma distribution of Glycohemoglobin:",coef(z_gamma_gh)[1]))
+print(paste("Scale of gamma distribution of Glycohemoglobin:",coef(z_gamma_gh)[2]))
+
 
 # gamma and ht
 ll_gamma_ht <- function(shape,scale){
@@ -278,17 +300,27 @@ ll_gamma_ht <- function(shape,scale){
 }
 z_gamma_ht <- mle(minuslogl=ll_gamma_ht, start=list(shape=1,scale=1),lower = c(0,0.01))
 
+print(paste("Shape of gamma distribution of Height:",coef(z_gamma_ht)[1]))
+print(paste("Scale of gamma distribution of Height:",coef(z_gamma_ht)[2]))
+
 # wb and gh
 ll_wb_gh  <- function(shape,scale){
   -sum(dweibull(gh, shape = shape ,scale = scale,log=T))
 }
 z_wb_gh <- mle(minuslogl=ll_wb_gh, start=list(shape=1,scale=1),lower = c(0,0.01))
 
+print(paste("Shape of Weibull distribution of Glycohemoglobin:",coef(z_wb_gh)[1]))
+print(paste("Scale of Weibull distribution of Glycohemoglobin:",coef(z_wb_gh)[2]))
+
+
 # wb and ht
 ll_wb_ht  <- function(shape,scale){
   -sum(dweibull(ht, shape = shape ,scale = scale,log=T))
 }
 z_wb_ht <- mle(minuslogl=ll_wb_ht, start=list(shape=1,scale=1),lower = c(0,0.01))
+
+print(paste("Shape of Weibull distribution of Height:",coef(z_wb_ht)[1]))
+print(paste("Scale of Weibull distribution of height:",coef(z_wb_ht)[2]))
 ```
 
 ### Pdf vs Histogram
