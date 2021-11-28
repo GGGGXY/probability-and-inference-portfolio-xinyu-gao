@@ -1,0 +1,154 @@
+---
+title: "Title of Blog Post Deliverable"
+author: 'Xinyu Gao'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction 
+
+The purpose of this assignment is to study the coverage probability. 
+
+## Background
+
+In this assignment, we will use following knowledge. 1. Given a sample, use MLE to estimate the parameters of this sample's distribution (normal distribution) 2. Generate new samples based on the parameters calculated from the previous step and find the median of these samples 3. Plot all the median and calculate the confidence interval of the median distribution 4. Compare the results from step3 with the median of the original sample and then calculate the coverage probability. 
+
+# Methods
+
+```{r}
+suppressPackageStartupMessages(require(tidyverse))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(stats4))
+```
+
+## Step1
+MLE is a method that tries a lot of possible parameters and find the parameters that can maximum the probability of obtaining the sample data. In other word, we need to find parameters that can maximum the following formula $$ f(x_1,x_2,...,x_n|parameters) $$ In R, we need to use mle to achieve this task. mle needs two primary parameters:1. negative likelihood function which needs to be minimized 2. starting point for the coefficient vector.
+```{r}
+# generate a single sample
+set.seed(1)
+sample <- rnorm(201,mean=0,sd=1)
+# use mle to calculate the parameters based on the sample
+ll_norm <- function(mean,sd){
+  -sum(dnorm(sample,mean = mean,sd = sd,log=T))
+}
+z_norm <- mle(minuslogl=ll_norm, start=list(mean=1,sd=1),
+                 method = "L-BFGS-B",
+                 lower = c(0,0.01))
+mean <- coef(z_norm)[1]
+sd <- coef(z_norm)[2]
+print(paste("The estimated mean of normal distribution is: ",mean))
+print(paste("The estimated standard deviation of normal distribution is: ", sd))
+```
+
+## Step2
+```{r}
+# I want to get 10000 samples and for each sample, there are 100 values
+result <- rep(NA, 10000)
+for (i in seq_along(result))
+{
+  # find the median of each sample using quantile function
+  result[i] = quantile(rnorm(100,mean = mean, sd = sd),0.5)
+}
+hist(result,freq=FALSE,xlab = "Median",main="Distribution of Median")
+```
+\
+This is the histogram of the sampling distribution of the median. The shape of the distribution is very close to the normal distribution.
+
+## Step3
+Based on the graphic from Step2, the sampling distribution of median is very close to normal distribution, which is symmetric. Thus, if we want to get the 95% confidence interval, we can use symmetric density interval method, which is to remove the leftmost 0.025% and rightmost 0.025% values in the distribution.
+```{r}
+median <- quantile(sample,0.5)
+# 95%
+x_0.025 = quantile(result,0.025)
+x_0.975 = quantile(result,0.975)
+hist(result,freq=FALSE,xlab = "Median",main="Distribution of Median")
+abline(v=x_0.025,col="red")
+abline(v=x_0.975,col="red")
+abline(v=median,col="blue")
+print(paste("The minimum value among 95% confidence interval is: ",x_0.025))
+print(paste("The maximum value among 95% confidence interval is: ",x_0.975))
+print(paste("The median of the original sample is: ",median))
+```
+\
+This is the histogram of the sampling distribution of the median. The red lines represent the range of the 95% confidence interval and the blue line represents the ture median of the original sample.
+
+## Step4 and Step5
+The coverage probability is calculated by comparing the estimated population parameters from samples (using confidence interval) with the true parameters of the population. Among all the samples, if the estimated population parameters from samples capture the true parameters of the population, the sample should be recorded. The coverage probability is the proportion of samples for which the confidence interval captured the true population parameter.
+```{r}
+# function that can return the 95% confidence interval of the sampling distribution of the median
+sample_95_confidence <- function()
+{
+  # 10000 samples
+  result <- rep(NA, 10000)
+  for (i in seq_along(result))
+  {
+    # each sample has 100 values and find the median of each sample using quantile
+    result[i] = quantile(rnorm(100,mean = mean, sd = sd),0.5)
+  }
+  # find the minimum value among the 95% confidence interval
+  x_0.025 = quantile(result,0.025)
+  # fine the maximum value among the 95% confidence interval
+  x_0.975 = quantile(result,0.975)
+  return(c(x_0.025, x_0.975))
+}
+
+# get 100 sampling distributions
+set.seed(1)
+num_sample_dis <- 100
+result <- replicate(num_sample_dis,sample_95_confidence())
+result <- as.data.frame(t(result))
+result$index <- 1:dim(result)[1]
+colnames(result) <- c("low","up","index")
+low <- result %>%
+  select(low,index) %>%
+  rename(value = low)
+up <- result %>%
+  select(up,index) %>%
+  rename(value = up)
+low_up <- rbind(low,up)
+
+# calculate the coverage probability
+count <- 0 
+for (i in 1:num_sample_dis)
+{
+  # get the minimum value and maximum value among the 95% confidence interval
+  values <- low_up %>%
+    filter(index == i) %>%
+    pull(value)
+  # the sample for which the confidence interval captured the population parameter
+  if (median>= values[1] & median <= values[2])
+  {
+    count <- count +1
+  }
+  cov_prob <- count/num_sample_dis
+}
+print(paste("The coverage probability is: ",cov_prob))
+
+# plot the result
+low_up %>%
+  ggplot(aes(x=value, y = index, group = index)) +
+  geom_line()+
+  geom_vline(xintercept = median,col="red")+
+  labs(
+    x = "Pop.parameter of interest",
+    y = "Sample"
+  )+
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+```
+\
+Based on the graphic, all 100 samples capture the population parameter of interest. Thus, the coverage probability should be 100%
+
+## Step6
+We can increase the original sample size to see whether the estimated parameters using the MLE will be more close to the real parameters. Also, we can try other methods, like MM to estimate the parameters. When generating the sampling distribution of median, I tried 10000 samples and for each sample, there was 100 values. We can adjust these two numbers to see if there is any difference.
+
