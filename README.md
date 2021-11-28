@@ -8,4 +8,5 @@ ec1-birthday-problem https://github.com/GGGGXY/probability-and-inference-portfol
 04-home-field-advantage https://github.com/GGGGXY/probability-and-inference-portfolio-xinyu-gao/tree/main/04-home-field-advantage \
 05-log-transformation https://github.com/GGGGXY/probability-and-inference-portfolio-xinyu-gao/tree/main/05-log-transformation \
 06-order-statistics https://github.com/GGGGXY/probability-and-inference-portfolio-xinyu-gao/tree/main/06-order-statistics \
-07-mle-and-mm https://github.com/GGGGXY/probability-and-inference-portfolio-xinyu-gao/tree/main/07-mle-and-mm
+07-mle-and-mm https://github.com/GGGGXY/probability-and-inference-portfolio-xinyu-gao/tree/main/07-mle-and-mm \
+08-coverage-probability https://github.com/GGGGXY/probability-and-inference-portfolio-xinyu-gao/tree/main/08-coverage-probability
