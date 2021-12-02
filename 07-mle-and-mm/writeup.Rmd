@@ -85,7 +85,8 @@ print(paste("Shape of gamma distribution of Height:",gamma_shape_hat_ht))
 ```
 
 #### Weibull
-It's difficult to calculate by myself. Thus I directly used formulas 
+It's difficult to calculate by myself. Thus I directly used formulas \
+Reference: https://www.researchgate.net/post/Can-anybody-explain-how-to-find-out-the-shape-and-scale-parameters-for-weibull-statistics-for-average-wind-speed-data-for-a-month (Answer posted by Jamal Faraji)
 ```{r}
 wb_shape_hat_gh <- (s2_gh^.5/x_gh)^(-1.086)
 print(paste("Shape of Weibull distribution of Glycohemoglobin:",wb_shape_hat_gh))

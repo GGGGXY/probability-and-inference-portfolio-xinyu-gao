@@ -11,7 +11,7 @@
 
 <meta name="author" content="Xinyu Gao" />
 
-<meta name="date" content="2021-11-25" />
+<meta name="date" content="2021-12-01" />
 
 <title>Title of Blog Post Deliverable</title>
 
@@ -255,7 +255,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Title of Blog Post Deliverable</h1>
 <h4 class="author">Xinyu Gao</h4>
-<h4 class="date">November 25, 2021</h4>
+<h4 class="date">December 01, 2021</h4>
 
 </div>
 
@@ -330,7 +330,8 @@ print(paste(&quot;Shape of gamma distribution of Height:&quot;,gamma_shape_hat_h
 </div>
 <div id="weibull" class="section level4" number="2.1.1.3">
 <h4 number="2.1.1.3"><span class="header-section-number">2.1.1.3</span> Weibull</h4>
-<p>It’s difficult to calculate by myself. Thus I directly used formulas</p>
+<p>It’s difficult to calculate by myself. Thus I directly used formulas<br />
+Reference: <a href="https://www.researchgate.net/post/Can-anybody-explain-how-to-find-out-the-shape-and-scale-parameters-for-weibull-statistics-for-average-wind-speed-data-for-a-month" class="uri">https://www.researchgate.net/post/Can-anybody-explain-how-to-find-out-the-shape-and-scale-parameters-for-weibull-statistics-for-average-wind-speed-data-for-a-month</a> (Answer posted by Jamal Faraji)</p>
 <pre class="r"><code>wb_shape_hat_gh &lt;- (s2_gh^.5/x_gh)^(-1.086)
 print(paste(&quot;Shape of Weibull distribution of Glycohemoglobin:&quot;,wb_shape_hat_gh))</code></pre>
 <pre><code>## [1] &quot;Shape of Weibull distribution of Glycohemoglobin: 6.29349323928302&quot;</code></pre>
