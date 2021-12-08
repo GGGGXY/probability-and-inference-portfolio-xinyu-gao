@@ -182,7 +182,7 @@ combine %>%
   theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),legend.position = "none")
 ```
 \
-
+The coverage probability is calculated by comparing the estimated population parameters from samples (using confidence interval) with the true parameters of the population.The coverage probability is the proportion of samples for which the confidence interval captured the true population parameter. In this case, the coverage probability is 0.939, which means among 1000 sampling distribution, there are about 60 distributions that don't capture the true population parameter like the red lines in the graphic.
 
 ## Step6
 We can increase the original sample size to see whether the estimated parameters using the MLE will be more close to the real parameters. Also, we can try other methods, like MM to estimate the parameters. When generating the sampling distribution of median, I tried 10000 samples and for each sample, there was 100 values. We can adjust these two numbers to see if there is any difference.
