@@ -67,17 +67,14 @@ This is the histogram of the sampling distribution of the median. The shape of t
 ## Step3
 Based on the graphic from Step2, the sampling distribution of median is very close to normal distribution, which is symmetric. Thus, if we want to get the 95% confidence interval, we can use symmetric density interval method, which is to remove the leftmost 0.025% and rightmost 0.025% values in the distribution.
 ```{r}
-median <- quantile(sample,0.5)
 # 95%
 x_0.025 = quantile(result,0.025)
 x_0.975 = quantile(result,0.975)
 hist(result,freq=FALSE,xlab = "Median",main="Distribution of Median")
 abline(v=x_0.025,col="red")
 abline(v=x_0.975,col="red")
-abline(v=median,col="blue")
 print(paste("The minimum value among 95% confidence interval is: ",x_0.025))
 print(paste("The maximum value among 95% confidence interval is: ",x_0.975))
-print(paste("The median of the original sample is: ",median))
 ```
 \
 This is the histogram of the sampling distribution of the median. The red lines represent the range of the 95% confidence interval and the blue line represents the ture median of the original sample.
@@ -88,12 +85,22 @@ The coverage probability is calculated by comparing the estimated population par
 # function that can return the 95% confidence interval of the sampling distribution of the median
 sample_95_confidence <- function()
 {
-  # 10000 samples
-  result <- rep(NA, 10000)
+  sample <- rnorm(201,mean=0,sd=1)
+  # use mle to calculate the parameters based on the sample
+  ll_norm <- function(mean,sd){
+    -sum(dnorm(sample,mean = mean,sd = sd,log=T))
+  }
+  z_norm <- mle(minuslogl=ll_norm, start=list(mean=1,sd=1),
+                 method = "L-BFGS-B",
+                 lower = c(0,0.01))
+  mean <- coef(z_norm)[1]
+  sd <- coef(z_norm)[2]
+  # 5000 samples
+  result <- rep(NA, 5000)
   for (i in seq_along(result))
   {
-    # each sample has 100 values and find the median of each sample using quantile
-    result[i] = quantile(rnorm(100,mean = mean, sd = sd),0.5)
+    # each sample has 500 values and find the median of each sample using quantile
+    result[i] = quantile(rnorm(500,mean = mean, sd = sd),0.5)
   }
   # find the minimum value among the 95% confidence interval
   x_0.025 = quantile(result,0.025)
@@ -102,9 +109,8 @@ sample_95_confidence <- function()
   return(c(x_0.025, x_0.975))
 }
 
-# get 100 sampling distributions
-set.seed(1)
-num_sample_dis <- 100
+# get 1000 sampling distributions
+num_sample_dis <- 1000
 result <- replicate(num_sample_dis,sample_95_confidence())
 result <- as.data.frame(t(result))
 result$index <- 1:dim(result)[1]
@@ -116,9 +122,10 @@ up <- result %>%
   select(up,index) %>%
   rename(value = up)
 low_up <- rbind(low,up)
-
+low_up['Status'] = 0
 # calculate the coverage probability
 count <- 0 
+
 for (i in 1:num_sample_dis)
 {
   # get the minimum value and maximum value among the 95% confidence interval
@@ -126,28 +133,56 @@ for (i in 1:num_sample_dis)
     filter(index == i) %>%
     pull(value)
   # the sample for which the confidence interval captured the population parameter
-  if (median>= values[1] & median <= values[2])
+  if (0 >= values[1] & 0 <= values[2])
   {
     count <- count +1
+    low_up['Status'][low_up['index']==i] = 1
   }
   cov_prob <- count/num_sample_dis
 }
 print(paste("The coverage probability is: ",cov_prob))
 
-# plot the result
-low_up %>%
-  ggplot(aes(x=value, y = index, group = index)) +
+# get maximum 5 sampling distributions that cover the population parameters
+cover <- low_up %>%
+  filter(Status == 1) %>%
+  group_by(index) %>%
+  summarise(Value = value,Status = Status) %>%
+  ungroup() %>%
+  slice(1:10)
+
+# get maximum 5 sampling distributions that don't cover the population parameters
+not_cover <- low_up %>%
+  filter(Status == 0) %>%
+  group_by(index) %>%
+  summarise(Value = value,Status = Status) %>%
+  ungroup() %>%
+  slice(1:10)
+
+# combine them and modify the index to make the furure more clear
+combine = rbind(cover,not_cover)
+total_len = dim(unique(combine['index']))[1]
+index <- unique(combine['index']) %>% `[[`(1)
+for (i in 1:total_len)
+{
+  combine['index'][combine['index'] == index[i]] = -i
+}
+
+#plot the graphic
+combine$Status <- as.factor(combine$Status)
+combine %>%
+  ggplot(aes(x=Value,y=-index,group = index, color = Status))+
   geom_line()+
-  geom_vline(xintercept = median,col="red")+
+  #scale_color_manual(values = c("blue","red"))+
+  geom_vline(xintercept = 0,col="grey")+
   labs(
     x = "Pop.parameter of interest",
     y = "Sample"
   )+
-  theme_bw() +
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),legend.position = "none")
 ```
 \
-Based on the graphic, all 100 samples capture the population parameter of interest. Thus, the coverage probability should be 100%
+
 
 ## Step6
 We can increase the original sample size to see whether the estimated parameters using the MLE will be more close to the real parameters. Also, we can try other methods, like MM to estimate the parameters. When generating the sampling distribution of median, I tried 10000 samples and for each sample, there was 100 values. We can adjust these two numbers to see if there is any difference.
