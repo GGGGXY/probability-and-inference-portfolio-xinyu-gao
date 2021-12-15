@@ -114,7 +114,7 @@ Create a plot that shows how D changes as N increases.  Put N on the x-asis, ran
 
 ```{r}
 # simulation
-set.seed(5)
+set.seed(8)
 D <- function(N)
 {
   result <- rowMeans(replicate(1000,game(N) == 'car'))
@@ -390,15 +390,15 @@ result_50 <- replicate(10000,quantile(exp(rnorm(101,mean = 0, sd = 1)),0.5))
 result_75 <- replicate(10000,quantile(exp(rnorm(101,mean = 0, sd = 1)),0.75))
  
 par(mfrow=c(3,1),mar = c(4,2,1,1))
-hist(result_25)
+hist(result_25,xlim = c(0.3,3))
 abline(v=quantile(result_25,0.025),col = "red")
 abline(v=quantile(result_25,0.975),col = "red")
 CI_25 <- quantile(result_25,0.975) - quantile(result_25,0.025)
-hist(result_50)
+hist(result_50,xlim = c(0.3,3))
 abline(v=quantile(result_50,0.025),col = "red")
 abline(v=quantile(result_50,0.975),col = "red")
 CI_50 <- quantile(result_50,0.975) - quantile(result_50,0.025)
-hist(result_75)
+hist(result_75,xlim = c(0.3,3))
 abline(v=quantile(result_75,0.025),col = "red")
 abline(v=quantile(result_75,0.975),col = "red")
 CI_75 <- quantile(result_75,0.975) - quantile(result_75,0.025)
